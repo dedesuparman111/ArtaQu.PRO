@@ -1,2 +1,2 @@
-# webdigital
-web digital
+# FulusKU
+management keurangan personal

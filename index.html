@@ -1,0 +1,2930 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FulusKUpro - Financial Manager</title>
+
+    <!-- ═══════════════════════════════════════════════
+         PWA META TAGS — wajib ada
+    ════════════════════════════════════════════════ -->
+    <meta name="theme-color" content="#2563eb" id="metaThemeColor">
+    <meta name="description" content="Kelola keuangan pribadi: transaksi, cicilan, dan saldo bersih.">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FulusKU">
+    <link rel="manifest" href="manifest.json">
+    <!-- Apple Touch Icon (pakai icon-192 yang sudah ada) -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #1f2937; 
+            transition: background-color 0.3s, color 0.3s; 
+        }
+        .transition-all-smooth { transition: all 0.3s ease-in-out; }
+        .hidden-screen { opacity: 0; pointer-events: none; position: absolute; z-index: -1; transform: translateY(20px); }
+        .active-screen { opacity: 1; pointer-events: auto; position: relative; z-index: 10; transform: translateY(0); }
+        .nav-item.active { 
+            color: var(--primary-color); 
+            border-bottom: 3px solid var(--primary-color); 
+            font-weight: 600;
+        }
+        
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: rgba(37, 99, 235, 0.08);
+
+            /* Premium design tokens */
+            --surface-1: rgba(255, 255, 255, 0.95);
+            --surface-2: rgba(249, 250, 251, 0.95);
+            --surface-3: rgba(243, 244, 246, 0.9);
+
+            --text-1: #0f172a;
+            --text-2: #334155;
+            --muted-1: #64748b;
+
+            --border-1: rgba(148, 163, 184, 0.28);
+            --border-2: rgba(229, 231, 235, 1);
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 6px 14px -6px rgba(37, 99, 235, 0.18);
+            --shadow-lg: 0 16px 40px -18px rgba(37, 99, 235, 0.25);
+            --shadow-xl: 0 26px 70px -28px rgba(37, 99, 235, 0.35);
+        }
+
+        .bg-accent { background-color: var(--primary-color) !important; }
+        .hover\:bg-accent-hover:hover { background-color: var(--primary-hover) !important; }
+        .bg-accent-light { background-color: var(--primary-light) !important; }
+        .text-accent { color: var(--primary-color) !important; }
+        .border-accent { border-color: var(--primary-color) !important; }
+        .focus-ring-accent:focus { --tw-ring-color: var(--primary-color) !important; border-color: var(--primary-color) !important; }
+
+        /* A11y focus (premium) */
+        :focus-visible {
+            outline: none !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+            border-color: rgba(37, 99, 235, 0.8) !important;
+        }
+        
+        .modal-overlay { 
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        /* Modal polish: border radius + outline in dark/light */
+        .modal-overlay > div {
+            border: 1px solid rgba(148, 163, 184, 0.20);
+        }
+
+        /* Ensure icon-only buttons in modal have consistent focus */
+        .modal-overlay button:focus-visible {
+            border-color: rgba(37, 99, 235, 0.9) !important;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18) !important;
+        }
+        
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+        .toast-animate { animation: slideInRight 0.3s ease-out forwards; }
+        .modal-animate-in { animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+
+        /* ════ ENHANCED FORM STYLING ════ */
+        input[type="text"], input[type="date"], input[type="number"], input[type="password"],
+        select, textarea {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05), var(--shadow-sm) !important;
+            border: 1.5px solid #e5e7eb !important;
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%) !important;
+        }
+        input[type="text"]:hover, input[type="date"]:hover, input[type="number"]:hover, input[type="password"]:hover,
+        select:hover, textarea:hover {
+            border-color: #d1d5db !important;
+            background: #ffffff !important;
+        }
+        input[type="text"]:focus, input[type="date"]:focus, input[type="number"]:focus, input[type="password"]:focus,
+        select:focus, textarea:focus {
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15), inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+            border-color: var(--primary-color) !important;
+            background: #ffffff !important;
+        }
+        input[type="text"]::placeholder, input[type="number"]::placeholder, textarea::placeholder {
+            color: #b0b8c1;
+            font-weight: 400;
+        }
+
+        /* ════ ENHANCED CARD STYLING ════ */
+        .card-hover { 
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); 
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            position: relative;
+        }
+        .card-hover::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .card-hover:hover::before {
+            opacity: 1;
+        }
+        .card-hover:hover { 
+            box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.15) !important; 
+            transform: translateY(-6px); 
+            border-color: rgba(37, 99, 235, 0.2);
+        }
+
+        /* ════ GLASS MORPHISM EFFECT ════ */
+        .glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.08);
+        }
+
+        /* ════ ENHANCED BUTTON STYLING ════ */
+        button { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+            pointer-events: none;
+        }
+        button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+        button:active { transform: scale(0.96); }
+        .btn-header-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .btn-header-action::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0);
+            transition: background 0.3s ease;
+            pointer-events: none;
+        }
+        .btn-header-action:hover::after {
+            background: rgba(59, 130, 246, 0.08);
+        }
+
+        /* ════ BADGE COMPONENT (premium) ════ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: 0.01em;
+            border: 1px solid transparent;
+            user-select: none;
+            white-space: nowrap;
+
+            /* Premium polish */
+            box-shadow:
+                0 10px 26px -18px rgba(2, 6, 23, 0.30),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+
+        .badge i {
+            font-size: 14px;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.10);
+            color: #059669;
+            border-color: rgba(16, 185, 129, 0.30);
+        }
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.10);
+            color: #dc2626;
+            border-color: rgba(239, 68, 68, 0.30);
+        }
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            border-color: rgba(245, 158, 11, 0.32);
+        }
+        .badge-neutral {
+            background: rgba(100, 116, 139, 0.10);
+            color: #475569;
+            border-color: rgba(100, 116, 139, 0.28);
+        }
+
+        /* badge shimmer for better visibility on glass backgrounds */
+        .badge:not(.badge-neutral) {
+            position: relative;
+            overflow: hidden;
+        }
+        .badge:not(.badge-neutral)::after {
+            content: '';
+            position: absolute;
+            inset: -20px -40px auto -40px;
+            height: 50px;
+            transform: rotate(12deg);
+            background: linear-gradient(90deg,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.20) 50%,
+                rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }
+        .badge:not(.badge-neutral):hover::after {
+            opacity: 1;
+        }
+
+        /* ════ TABLE STYLING ════ */
+        table tbody tr { 
+            transition: all 0.2s ease; 
+            border-bottom: 1px solid #f3f4f6;
+        }
+        table tbody tr:hover { 
+            background: linear-gradient(90deg, rgba(37, 99, 235, 0.03), transparent) !important;
+        }
+        table thead {
+            background: linear-gradient(90deg, #f9fafb 0%, #f3f4f6 50%, #f9fafb 100%);
+            border-bottom: 2px solid #e5e7eb;
+        }
+        table th {
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-size: 11px;
+            padding: 16px 24px !important;
+        }
+        table td {
+            padding: 16px 24px !important;
+        }
+
+        /* ════ SCROLLBAR STYLING ════ */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #d1d5db, #e5e7eb);
+            border-radius: 10px;
+            transition: background 0.3s ease;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #9ca3af, #d1d5db);
+        }
+        body.dark ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #475569, #64748b);
+        }
+        body.dark ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #64748b, #94a3b8);
+        }
+
+        /* ════ DARK MODE ════ */
+        body.dark { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
+            color: #f1f5f9 !important; 
+            --surface-1: rgba(15, 23, 42, 0.92);
+            --surface-2: rgba(30, 41, 59, 0.92);
+            --surface-3: rgba(51, 65, 85, 0.82);
+            --text-1: #f8fafc;
+            --text-2: #e2e8f0;
+            --muted-1: #94a3b8;
+            --border-1: rgba(148, 163, 184, 0.25);
+        }
+        body.dark .bg-white { 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important; 
+            color: #f8fafc !important; 
+            border: 1px solid rgba(148, 163, 184, 0.2) !important; 
+        }
+        body.dark .glass {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.78));
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            box-shadow: 0 10px 40px rgba(2, 6, 23, 0.35);
+        }
+        body.dark .bg-gray-50 { background-color: #1e293b !important; border-color: #334155 !important; }
+        body.dark .bg-gray-100 { background-color: #334155 !important; border-color: #475569 !important; }
+        body.dark .text-gray-900, body.dark .text-gray-800, body.dark .text-gray-700 { color: #f1f5f9 !important; }
+        body.dark .text-gray-600, body.dark .text-gray-500, body.dark .text-gray-400 { color: #cbd5e1 !important; }
+        body.dark .border-gray-100, body.dark .border-gray-200, body.dark .border-gray-300 { border-color: #334155 !important; }
+        body.dark input, body.dark select, body.dark textarea { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
+            border-color: #475569 !important; 
+            color: #f1f5f9 !important; 
+        }
+        body.dark input:hover, body.dark select:hover, body.dark textarea:hover {
+            background: #1e293b !important;
+        }
+        body.dark input:focus, body.dark select:focus, body.dark textarea:focus {
+            background: #1e293b !important;
+            border-color: var(--primary-color) !important;
+        }
+        body.dark .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+        body.dark .modal-overlay { background-color: rgba(15, 23, 42, 0.85); }
+        body.dark table thead { background: linear-gradient(90deg, #1e293b 0%, #0f172a 50%, #1e293b 100%) !important; border-color: #475569 !important; }
+        body.dark table tbody tr { border-color: #334155 !important; }
+        body.dark table tbody tr:hover { background: linear-gradient(90deg, rgba(37, 99, 235, 0.08), transparent) !important; }
+
+        /* dark badge tweaks */
+        body.dark .badge-success {
+            background: rgba(16, 185, 129, 0.14);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.28);
+        }
+        body.dark .badge-danger {
+            background: rgba(239, 68, 68, 0.14);
+            color: #f87171;
+            border-color: rgba(239, 68, 68, 0.28);
+        }
+        body.dark .badge-warning {
+            background: rgba(245, 158, 11, 0.16);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.30);
+        }
+        body.dark .badge-neutral {
+            background: rgba(148, 163, 184, 0.14);
+            color: #cbd5e1;
+            border-color: rgba(148, 163, 184, 0.28);
+        }
+
+        /* ════ PWA INSTALL BANNER ════ */
+        #pwa-banner {
+            position: fixed;
+            bottom: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 480px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.97), rgba(249, 250, 251, 0.95));
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 9999;
+            transition: bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid rgba(37, 99, 235, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        #pwa-banner.show { bottom: 24px; }
+        body.dark #pwa-banner { 
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.9));
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        .pwa-banner-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 24px;
+            flex-shrink: 0;
+            box-shadow: 0 8px 16px rgba(37, 99, 235, 0.35);
+        }
+        .pwa-banner-text { flex: 1; }
+        .pwa-banner-text strong { display: block; font-size: 14px; font-weight: 700; color: #1f2937; }
+        body.dark .pwa-banner-text strong { color: #f1f5f9; }
+        .pwa-banner-text span { font-size: 12px; color: #6b7280; }
+        body.dark .pwa-banner-text span { color: #cbd5e1; }
+        .pwa-btn-install {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none;
+            padding: 10px 16px; border-radius: 10px;
+            font-size: 13px; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+        }
+        .pwa-btn-install:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
+        }
+        .pwa-btn-install:active { transform: translateY(0); }
+        .pwa-btn-dismiss {
+            background: none; border: none;
+            color: #d1d5db; cursor: pointer;
+            font-size: 18px; padding: 4px 6px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .pwa-btn-dismiss:hover { 
+            color: #6b7280;
+            transform: rotate(90deg);
+        }
+
+        /* ════ iOS GUIDE MODAL ════ */
+        #ios-modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 9998;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        #ios-modal.show { display: flex; }
+        .ios-box {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 24px 24px 0 0;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        body.dark .ios-box { 
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+            border-top-color: rgba(148, 163, 184, 0.2);
+        }
+        .ios-box h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; color: #1f2937; }
+        body.dark .ios-box h3 { color: #f1f5f9; }
+        .ios-box p { font-size: 14px; color: #6b7280; margin-bottom: 18px; line-height: 1.6; }
+        body.dark .ios-box p { color: #cbd5e1; }
+        .ios-step { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+        .step-num {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700;
+            flex-shrink: 0; margin-top: 2px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+        .step-text { font-size: 14px; color: #374151; line-height: 1.6; }
+        body.dark .step-text { color: #e2e8f0; }
+        .btn-close-ios {
+            width: 100%; margin-top: 20px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white; border: none;
+            padding: 14px; border-radius: 12px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.25);
+        }
+        .btn-close-ios:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+        }
+        .btn-close-ios:active { transform: translateY(0); }
+
+        /* ════ FULLSCREEN BUTTON ════ */
+        #btn-fullscreen {
+            display: none; /* default hidden */
+        }
+        /* Hanya tampilkan di browser (bukan PWA standalone) */
+        @media not all and (display-mode: standalone) {
+            #btn-fullscreen { display: flex; }
+        }
+        /* Sembunyikan saat betul-betul fullscreen (toolbar sudah tidak kelihatan) */
+        :fullscreen #btn-fullscreen,
+        :-webkit-full-screen #btn-fullscreen {
+            /* tetap tampil agar bisa exit */
+        }
+
+        /* ════ HEADER MOBILE RESPONSIVE ════ */
+        @media (max-width: 480px) {
+            .header-actions .btn-header-action {
+                padding: 6px;
+            }
+            .header-actions .btn-header-action i {
+                font-size: 15px;
+            }
+            .header-actions {
+                gap: 2px !important;
+            }
+            .app-brand-name {
+                font-size: 16px !important;
+            }
+            .app-brand-icon {
+                font-size: 20px !important;
+            }
+        }
+
+        /* ════ OFFLINE BADGE ════ */
+        #offline-badge {
+            position: fixed;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 0 0 20px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            z-index: 9997;
+            transition: top 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            box-shadow: 0 8px 16px rgba(239,68,68,0.3);
+        }
+        #offline-badge i { font-size: 13px; }
+        #offline-badge.show { top: 0; }
+
+        /* ════ UPDATE BANNER ════ */
+        #update-banner {
+            position: fixed;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 420px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 0 0 14px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9998;
+            transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            box-shadow: 0 8px 16px rgba(16,185,129,0.35);
+        }
+        #update-banner i { font-size: 15px; }
+        #update-banner.show { top: 0; }
+        #update-banner button {
+            background: rgba(255,255,255,0.25);
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-left: auto;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        #update-banner button:hover { 
+            background: rgba(255,255,255,0.35);
+            transform: translateY(-1px);
+        }
+
+        /* ════ BANK TOAST ════ */
+        #installed-toast {
+            position: fixed;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 600;
+            z-index: 9999;
+            transition: bottom 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 8px 16px rgba(16,185,129,0.3);
+        }
+        #installed-toast.show { bottom: 80px; }
+
+        /* iOS safe area padding */
+        @supports(padding-bottom: env(safe-area-inset-bottom)) {
+            #pwa-banner.show { bottom: calc(24px + env(safe-area-inset-bottom)); }
+            .ios-box { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+        }
+
+        /* ════ DARK MODE: SETTINGS FORM FONT FIXES ════ */
+        body.dark .modal-overlay .font-bold,
+        body.dark .modal-overlay .font-semibold,
+        body.dark .modal-overlay label,
+        body.dark .modal-overlay h3 {
+            color: #f1f5f9 !important;
+        }
+        body.dark .modal-overlay .text-gray-900 {
+            color: #f1f5f9 !important;
+        }
+        body.dark .modal-overlay .text-gray-800 {
+            color: #e2e8f0 !important;
+        }
+        body.dark .modal-overlay .text-gray-600,
+        body.dark .modal-overlay .text-gray-500 {
+            color: #cbd5e1 !important;
+        }
+        body.dark .modal-overlay .bg-gray-50 {
+            background-color: #1e293b !important;
+        }
+        body.dark .modal-overlay .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+            background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
+        }
+        body.dark .modal-overlay .border-gray-200 {
+            border-color: #334155 !important;
+        }
+        /* Settings modal accent button (theme toggle) text color fix */
+        body.dark #theme-light-btn,
+        body.dark #theme-dark-btn {
+            color: #e2e8f0;
+        }
+        body.dark #theme-light-btn:not(.bg-accent),
+        body.dark #theme-dark-btn:not(.bg-accent) {
+            border-color: #475569;
+        }
+        /* Fix accent color buttons ring in dark */
+        body.dark .modal-overlay .bg-gray-100 {
+            background-color: #334155 !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark .modal-overlay .bg-gray-200 {
+            background-color: #475569 !important;
+            color: #e2e8f0 !important;
+        }
+        body.dark .modal-overlay .text-red-700 {
+            color: #f87171 !important;
+        }
+        body.dark .modal-overlay .bg-red-50 {
+            background-color: rgba(239, 68, 68, 0.12) !important;
+        }
+        body.dark .modal-overlay .border-red-200 {
+            border-color: rgba(239, 68, 68, 0.25) !important;
+        }
+        body.dark .modal-overlay .text-red-600 {
+            color: #f87171 !important;
+        }
+        body.dark .modal-overlay .text-blue-600 {
+            color: #60a5fa !important;
+        }
+        body.dark .modal-overlay .text-green-600 {
+            color: #34d399 !important;
+        }
+        body.dark .modal-overlay .bg-green-50 {
+            background-color: rgba(16, 185, 129, 0.12) !important;
+        }
+
+        /* ════ MOBILE BOTTOM NAVIGATION (Native App Style) ════ */
+        #mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 45;
+            background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(249,250,251,0.99) 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 1px solid rgba(148, 163, 184, 0.18);
+            padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -8px 30px rgba(0,0,0,0.06);
+        }
+        body.dark #mobile-bottom-nav {
+            background: linear-gradient(180deg, rgba(15,23,42,0.96) 0%, rgba(2,6,23,0.99) 100%);
+            border-top-color: rgba(148, 163, 184, 0.12);
+            box-shadow: 0 -8px 30px rgba(0,0,0,0.25);
+        }
+        @media (max-width: 640px) {
+            #mobile-bottom-nav {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            /* Hide desktop nav tabs on mobile */
+            .desktop-nav-tabs {
+                display: none !important;
+            }
+            /* Add bottom padding to main content to avoid footer overlap */
+            main {
+                padding-bottom: 90px !important;
+            }
+        }
+
+        .mob-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            color: #94a3b8;
+            -webkit-tap-highlight-color: transparent;
+            min-width: 64px;
+        }
+        .mob-nav-item i {
+            font-size: 22px;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            z-index: 2;
+        }
+        .mob-nav-item span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ════ NEON GLOW EFFECTS ════ */
+        @keyframes neonPulse {
+            0%, 100% { 
+                box-shadow: 0 0 8px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4),
+                           0 0 20px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.2),
+                           inset 0 0 12px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.08);
+            }
+            50% { 
+                box-shadow: 0 0 12px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.6),
+                           0 0 35px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.3),
+                           inset 0 0 18px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.12);
+            }
+        }
+        @keyframes neonTextPulse {
+            0%, 100% { 
+                text-shadow: 0 0 6px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.6),
+                            0 0 14px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.3);
+            }
+            50% { 
+                text-shadow: 0 0 10px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.8),
+                            0 0 24px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4);
+            }
+        }
+        @keyframes neonDotPulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.3); opacity: 1; }
+        }
+
+        .mob-nav-item.active {
+            color: var(--primary-color);
+            --neon-r: 37;
+            --neon-g: 99;
+            --neon-b: 235;
+        }
+        .mob-nav-item.active i {
+            animation: neonTextPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.5));
+            transform: translateY(-2px) scale(1.12);
+        }
+        .mob-nav-item.active span {
+            color: var(--primary-color);
+            text-shadow: 0 0 8px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.5);
+        }
+
+        /* Neon active indicator dot */
+        .mob-nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            box-shadow: 0 0 6px var(--primary-color),
+                        0 0 14px var(--primary-color),
+                        0 0 24px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.4);
+            animation: neonDotPulse 2s ease-in-out infinite;
+        }
+
+        /* Neon glow background for active item */
+        .mob-nav-item.active::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            background: radial-gradient(ellipse at center bottom, 
+                rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.12) 0%, 
+                transparent 70%);
+            z-index: 0;
+            animation: neonPulse 2s ease-in-out infinite;
+        }
+
+        /* Hover neon hint */
+        .mob-nav-item:not(.active):hover {
+            color: var(--primary-color);
+            background: rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.05);
+        }
+        .mob-nav-item:not(.active):hover i {
+            transform: translateY(-1px);
+            filter: drop-shadow(0 0 4px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.3));
+        }
+
+        /* Dark mode neon enhancements */
+        body.dark .mob-nav-item {
+            color: #64748b;
+        }
+        body.dark .mob-nav-item.active {
+            color: var(--primary-color);
+        }
+        body.dark .mob-nav-item.active::before {
+            background: radial-gradient(ellipse at center bottom, 
+                rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.18) 0%, 
+                transparent 70%);
+        }
+        body.dark .mob-nav-item.active i {
+            filter: drop-shadow(0 0 10px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.7));
+        }
+        body.dark .mob-nav-item.active span {
+            text-shadow: 0 0 10px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.7);
+        }
+        body.dark .mob-nav-item.active::after {
+            box-shadow: 0 0 8px var(--primary-color),
+                        0 0 20px var(--primary-color),
+                        0 0 35px rgba(var(--neon-r), var(--neon-g), var(--neon-b), 0.5);
+        }
+        /* Plus button neon */
+        .mob-nav-add-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 4px 16px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.45),
+                        0 0 20px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.25);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            top: -14px;
+            z-index: 3;
+            border: 3px solid rgba(255,255,255,0.2);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mob-nav-add-btn:hover {
+            transform: scale(1.1) translateY(-2px);
+            box-shadow: 0 6px 24px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.55),
+                        0 0 30px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.35);
+        }
+        .mob-nav-add-btn:active {
+            transform: scale(0.95);
+        }
+        body.dark .mob-nav-add-btn {
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 4px 20px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.55),
+                        0 0 30px rgba(var(--neon-r, 37), var(--neon-g, 99), var(--neon-b, 235), 0.35);
+        }
+
+        /* PWA banner offset on mobile when footer is present */
+        @media (max-width: 640px) {
+            #pwa-banner.show { bottom: 80px; }
+            #installed-toast.show { bottom: 90px; }
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+    <!-- ════ OFFLINE BADGE ════ -->
+    <div id="offline-badge">
+        <i class="bi bi-wifi-off"></i> Tidak ada koneksi internet
+    </div>
+
+    <!-- ════ PENDING SYNC BADGE ════ -->
+    <div id="pending-sync-badge-container" style="position: fixed; top: 10px; right: 10px; z-index: 50;">
+        <div id="pending-sync-badge" style="display: none; background: #f59e0b; color: white; border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            0
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="active-screen transition-all-smooth min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100 p-4 relative overflow-hidden">
+        <!-- Background decoration -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style="animation-delay: 2s;"></div>
+        
+        <div class="max-w-md w-full glass rounded-3xl shadow-2xl p-8 text-center relative z-10">
+            <div class="mb-8 relative">
+                <button onclick="App.openModal('modal-settings')" class="absolute -top-4 -right-4 p-2 text-gray-400 hover:text-accent hover:bg-white rounded-full hover:shadow-lg transition" title="Pengaturan Koneksi">
+                    <i class="bi bi-gear-fill text-lg"></i>
+                </button>
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 text-accent rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-lg relative">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">FulusKUpro</h1>
+                <p class="text-sm text-gray-600 mt-2 font-medium">Kelola keuangan Anda dengan profesional.</p>
+            </div>
+
+            <div id="loginError" class="hidden mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm text-left border border-red-100 animate-pulse"></div>
+
+            <form id="loginForm" class="space-y-5 text-left fade-in" onsubmit="event.preventDefault(); App.login();">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-2">Username</label>
+                    <input type="text" id="loginUsername" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-accent focus:border-accent outline-none transition" placeholder="admin" required autocomplete="username">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-800 mb-2">Password</label>
+                    <input type="password" id="loginPassword" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus-ring-accent focus:border-accent outline-none transition" placeholder="admin123" required autocomplete="current-password">
+                </div>
+                <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 rounded-lg transition-all flex justify-center items-center gap-2 mt-7 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+                    <span id="loginText">Masuk</span>
+                    <i id="loginSpinner" class="bi bi-arrow-repeat animate-spin hidden"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION WORKSPACE -->
+    <div id="mainApp" class="hidden-screen transition-all-smooth flex flex-col min-h-screen">
+        <header class="bg-gradient-to-r from-white via-white to-gray-50 shadow-md sticky top-0 z-40 border-b border-gray-100">
+            <div class="max-w-5xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 text-accent flex-shrink-0 min-w-0">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                        <i class="bi bi-cash-coin app-brand-icon text-xl text-white"></i>
+                    </div>
+                    <span class="font-bold app-brand-name text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent truncate">FulusKUpro</span>
+                </div>
+                <div class="header-actions flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                    <span class="text-sm text-gray-600 hidden sm:block mr-1 font-medium">Halo, <b id="userNameDisplay" class="text-gray-900">Admin</b></span>
+                    <!-- Tombol Fullscreen — hanya muncul di browser, tersembunyi di PWA standalone -->
+                    <button id="btn-fullscreen" onclick="FS.toggle()" class="btn-header-action p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition items-center" title="Layar Penuh">
+                        <i id="fs-icon" class="bi bi-fullscreen text-lg"></i>
+                    </button>
+                    <button onclick="App.refreshData()" class="btn-header-action p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition" title="Segarkan Data">
+                        <i class="bi bi-arrow-repeat text-lg"></i>
+                        <span class="hidden md:inline text-sm font-medium ml-1">Segarkan</span>
+                    </button>
+                    <button onclick="App.openModal('modal-settings')" class="btn-header-action p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition" title="Pengaturan Tampilan">
+                        <i class="bi bi-gear text-lg"></i>
+                    </button>
+                    <button onclick="App.askResetData()" class="btn-header-action p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="Reset Semua Data">
+                        <i class="bi bi-arrow-counterclockwise text-lg"></i>
+                        <span class="hidden md:inline text-sm font-medium ml-1">Reset</span>
+                    </button>
+                    <button onclick="App.logout()" class="btn-header-action p-2 text-gray-600 hover:bg-blue-50 rounded-lg transition" title="Keluar">
+                        <i class="bi bi-box-arrow-right text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="desktop-nav-tabs max-w-5xl mx-auto px-3 sm:px-4 flex border-t border-gray-100 overflow-x-auto hide-scrollbar">
+                <button onclick="App.switchView('dashboard')" class="nav-item active px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-medium text-gray-600 hover:text-accent whitespace-nowrap flex items-center gap-2 transition-all relative" data-target="dashboard">
+                    <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
+                </button>
+                <button onclick="App.switchView('transactions')" class="nav-item px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-medium text-gray-600 hover:text-accent whitespace-nowrap flex items-center gap-2 transition-all relative" data-target="transactions">
+                    <i class="bi bi-wallet2"></i> <span>Transaksi</span>
+                </button>
+                <button onclick="App.switchView('installments')" class="nav-item px-4 sm:px-5 py-2.5 sm:py-3 text-sm font-medium text-gray-600 hover:text-accent whitespace-nowrap flex items-center gap-2 transition-all relative" data-target="installments">
+                    <i class="bi bi-credit-card"></i> <span>Cicilan</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="flex-1 max-w-5xl mx-auto w-full p-4 pb-8">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view-section space-y-6 fade-in">
+                <div class="bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden card-hover" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 50%, #6366f1 100%)">
+                    <div class="absolute top-0 right-0 p-6 opacity-10">
+                        <i class="bi bi-cash-coin text-9xl"></i>
+                    </div>
+                    <div class="absolute bottom-0 left-0 w-40 h-40 bg-white/5 rounded-full -mb-20 -ml-20"></div>
+                    <div class="absolute top-1/2 right-1/4 w-32 h-32 bg-blue-300/10 rounded-full blur-2xl"></div>
+                    <div class="relative z-10">
+                        <p class="text-blue-100 text-sm font-semibold mb-2 tracking-wide">Total Saldo Bersih</p>
+                        <h2 class="text-4xl sm:text-5xl font-bold" id="dashBalance">Rp 0</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass rounded-2xl p-6 card-hover">
+                        <div class="flex items-center gap-3 text-green-600 mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-50 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-arrow-down-circle text-lg"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-gray-700">Pendapatan</span>
+                        </div>
+                        <div class="text-xl font-bold text-gray-900" id="dashIncome">Rp 0</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 card-hover">
+                        <div class="flex items-center gap-3 text-red-500 mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-red-100 to-pink-50 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-arrow-up-circle text-lg"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-gray-700">Pengeluaran</span>
+                        </div>
+                        <div class="text-xl font-bold text-gray-900" id="dashExpense">Rp 0</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 card-hover">
+                        <div class="flex items-center gap-3 text-orange-500 mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-orange-100 to-amber-50 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-credit-card text-lg"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-gray-700">Cicilan Aktif</span>
+                        </div>
+                        <div class="text-xl font-bold text-gray-900" id="dashDebt">Rp 0</div>
+                    </div>
+                    <div class="glass rounded-2xl p-6 card-hover">
+                        <div class="flex items-center gap-3 text-blue-600 mb-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-50 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-journal-plus text-lg"></i>
+                            </div>
+                            <span class="text-xs font-bold uppercase tracking-widest text-gray-700">Total Piutang</span>
+                        </div>
+                        <div class="text-xl font-bold text-gray-900" id="dashReceivable">Rp 0</div>
+                    </div>
+                </div>
+
+                <div class="glass rounded-2xl shadow-md border border-gray-100 p-6 card-hover">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="font-bold text-lg text-gray-900 flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                                <i class="bi bi-buildings text-blue-600"></i>
+                            </div>
+                            Sisa Cicilan per Kreditur
+                        </h3>
+                        <div class="text-sm font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full" id="dashTotalInstallmentOutstanding">Total Sisa: Rp 0</div>
+                    </div>
+                    <div id="creditorWidgetList" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- VIEW: TRANSACTIONS -->
+            <div id="view-transactions" class="view-section hidden space-y-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Riwayat Transaksi</h2>
+                    <button onclick="App.openModal('modal-add-trx')" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-md hover:shadow-lg flex gap-2 items-center">
+                        <i class="bi bi-plus-lg text-lg"></i> <span class="hidden sm:inline">Tambah Transaksi</span>
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden card-hover">
+                    <!-- Desktop/table -->
+                    <div class="overflow-x-auto hidden sm:block" id="trxTableWrap">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4">Tanggal</th>
+                                    <th class="px-6 py-4">Jenis</th>
+                                    <th class="px-6 py-4">Kategori</th>
+                                    <th class="px-6 py-4">Deskripsi</th>
+                                    <th class="px-6 py-4 text-right">Jumlah</th>
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trxTableBody" class="divide-y divide-gray-100 text-gray-700"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile/list -->
+                    <div class="block sm:hidden p-3" id="trxListWrap">
+                        <div id="trxListBody" class="space-y-3"></div>
+                        <div id="trxEmptyMobile" class="hidden p-10 text-center text-gray-500">
+                            <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
+                            <p class="font-medium">Belum ada transaksi.</p>
+                        </div>
+                    </div>
+
+                    <!-- Empty desktop -->
+                    <div id="trxEmpty" class="hidden p-12 text-center text-gray-500 sm:block">
+                        <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
+                        <p class="font-medium">Belum ada transaksi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: INSTALLMENTS -->
+            <div id="view-installments" class="view-section hidden space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Manajemen Cicilan</h2>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <select id="creditorFilter" onchange="App.filterByCreditor()" class="flex-1 sm:flex-none border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 px-4 py-2.5 outline-none font-medium">
+                            <option value="all">-- Semua Kreditur --</option>
+                        </select>
+                        <button onclick="App.openModal('modal-add-inst')" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-md hover:shadow-lg whitespace-nowrap flex gap-2 items-center">
+                            <i class="bi bi-plus-lg text-lg"></i> <span class="hidden sm:inline">Cicilan Baru</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-2xl border border-blue-200 card-hover">
+                        <p class="text-blue-700 text-xs font-bold uppercase mb-2 tracking-widest">Total Pinjaman</p>
+                        <h4 class="text-2xl font-bold text-blue-900" id="recapTotalAmount">Rp 0</h4>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-2xl border border-green-200 card-hover">
+                        <p class="text-green-700 text-xs font-bold uppercase mb-2 tracking-widest">Sudah Dibayar</p>
+                        <h4 class="text-2xl font-bold text-green-900" id="recapPaidAmount">Rp 0</h4>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-2xl border border-red-200 card-hover">
+                        <p class="text-red-700 text-xs font-bold uppercase mb-2 tracking-widest">Sisa Tagihan</p>
+                        <h4 class="text-2xl font-bold text-red-900" id="recapRemaining">Rp 0</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden card-hover">
+                    <!-- Desktop/table -->
+                    <div class="overflow-x-auto hidden sm:block" id="instTableWrap">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-b border-gray-200">
+                                <tr>
+                                    <th class="px-6 py-4">Barang / Nama</th>
+                                    <th class="px-6 py-4">Kreditur</th>
+                                    <th class="px-6 py-4 text-right">Total Cicilan</th>
+                                    <th class="px-6 py-4 text-right">Sisa</th>
+                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="instTableBody" class="divide-y divide-gray-100 text-gray-700"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Mobile/list -->
+                    <div class="block sm:hidden p-3" id="instListWrap">
+                        <div id="instListBody" class="space-y-3"></div>
+                        <div id="instEmptyMobile" class="hidden p-10 text-center text-gray-500">
+                            <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
+                            <p class="font-medium">Belum ada data cicilan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Empty desktop -->
+                    <div id="instEmpty" class="hidden p-12 text-center text-gray-500 sm:block">
+                        <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
+                        <p class="font-medium">Belum ada data cicilan.</p>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL: ADD TRANSACTION -->
+    <div id="modal-add-trx" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-add-trx-content">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900">Tambah Transaksi</h3>
+                <button onclick="App.closeModal('modal-add-trx')" aria-label="Tutup modal tambah transaksi" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="trxForm" onsubmit="event.preventDefault(); App.submitTransaction();" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Tanggal</label>
+                        <input type="date" id="trxDate" class="w-full border-gray-300 rounded-lg p-3 border focus:ring-blue-500 focus:border-blue-500 outline-none focus-ring-accent font-medium" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Jenis</label>
+                            <select id="trxType" onchange="App.handleTrxTypeChange()" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium">
+                                <option value="Pendapatan">Pendapatan</option>
+                                <option value="Pengeluaran">Pengeluaran</option>
+                                <option value="Piutang">Piutang (Memberi)</option>
+                                <option value="Cicilan">Bayar Cicilan</option>
+                            </select>
+                        </div>
+                        <div id="trxCategoryWrapper">
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Kategori</label>
+                            <input type="text" id="trxCategory" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Gaji, Makanan, dll" required>
+                        </div>
+                    </div>
+                    <div id="trxInstallmentWrapper" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Pilih Cicilan</label>
+                        <select id="trxInstallmentId" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Jumlah (Rp)</label>
+                        <input type="number" id="trxAmount" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" min="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Keterangan</label>
+                        <textarea id="trxDesc" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" rows="2" placeholder="Opsional"></textarea>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-3">
+                        <button type="button" onclick="App.closeModal('modal-add-trx')" class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold transition">Batal</button>
+                        <button type="submit" id="btnSubmitTrx" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold flex items-center gap-2 transition shadow-md">Simpan <i id="spinTrx" class="bi bi-arrow-repeat animate-spin hidden"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD INSTALLMENT -->
+    <div id="modal-add-inst" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-add-inst-content">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900">Tambah Cicilan Baru</h3>
+                <button onclick="App.closeModal('modal-add-inst')" aria-label="Tutup modal tambah cicilan" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="instForm" onsubmit="event.preventDefault(); App.submitInstallment();" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Barang / Keperluan</label>
+                        <input type="text" id="instName" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Contoh: Cicilan Motor" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Kreditur (Pihak Peminjam)</label>
+                        <input type="text" id="instCreditor" list="existingCreditors" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Contoh: Leasing ABC" required>
+                        <datalist id="existingCreditors"></datalist>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Total Nilai Pinjaman (Rp)</label>
+                        <input type="number" id="instTotal" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" min="1" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Tanggal Mulai</label>
+                            <input type="date" id="instDate" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Jatuh Tempo</label>
+                            <input type="date" id="instDueDate" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Catatan Tambahan</label>
+                        <textarea id="instDesc" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" rows="2" placeholder="Opsional"></textarea>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-3">
+                        <button type="button" onclick="App.closeModal('modal-add-inst')" class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold transition">Batal</button>
+                        <button type="submit" id="btnSubmitInst" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold flex items-center gap-2 transition shadow-md">Simpan <i id="spinInst" class="bi bi-arrow-repeat animate-spin hidden"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS -->
+    <div id="modal-settings" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300 max-h-[90vh] overflow-y-auto" id="modal-settings-content">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900">Pengaturan Tampilan</h3>
+                <button onclick="App.closeModal('modal-settings')" aria-label="Tutup modal pengaturan" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-7">
+                <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Mode Aplikasi</label>
+                    <div class="flex gap-3">
+                        <button onclick="App.setTheme('light')" id="theme-light-btn" class="flex-1 py-3.5 px-4 border-2 border-gray-200 rounded-xl font-semibold flex justify-center items-center gap-2 transition hover:bg-yellow-50 hover:border-yellow-300">
+                            <i class="bi bi-sun-fill text-yellow-500 text-lg"></i> Terang
+                        </button>
+                        <button onclick="App.setTheme('dark')" id="theme-dark-btn" class="flex-1 py-3.5 px-4 border-2 border-gray-200 rounded-xl font-semibold flex justify-center items-center gap-2 transition hover:bg-indigo-50 hover:border-indigo-300">
+                            <i class="bi bi-moon-stars-fill text-indigo-500 text-lg"></i> Gelap
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Warna Aksen Aplikasi</label>
+                    <div class="grid grid-cols-5 gap-3">
+                        <button onclick="App.applyAccent('blue')" class="w-12 h-12 rounded-full bg-blue-600 mx-auto relative border-4 border-transparent transition hover:scale-110 shadow-md hover:shadow-lg" id="accent-blue-btn" title="Classic Blue"></button>
+                        <button onclick="App.applyAccent('orange')" class="w-12 h-12 rounded-full bg-orange-500 mx-auto relative border-4 border-transparent transition hover:scale-110 shadow-md hover:shadow-lg" id="accent-orange-btn" title="Neon Orange"></button>
+                        <button onclick="App.applyAccent('green')" class="w-12 h-12 rounded-full bg-emerald-500 mx-auto relative border-4 border-transparent transition hover:scale-110 shadow-md hover:shadow-lg" id="accent-green-btn" title="Emerald Green"></button>
+                        <button onclick="App.applyAccent('purple')" class="w-12 h-12 rounded-full bg-purple-600 mx-auto relative border-4 border-transparent transition hover:scale-110 shadow-md hover:shadow-lg" id="accent-purple-btn" title="Royal Purple"></button>
+                        <button onclick="App.applyAccent('red')" class="w-12 h-12 rounded-full bg-red-600 mx-auto relative border-4 border-transparent transition hover:scale-110 shadow-md hover:shadow-lg" id="accent-red-btn" title="Crimson Red"></button>
+                    </div>
+                </div>
+
+                <!-- ════ DATABASE CONNECTION SECTION ════ -->
+                <div class="pt-4 border-t border-gray-200">
+                    <label class="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Koneksi Database (Google Sheets)</label>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-semibold text-gray-600">Spreadsheet ID</label>
+                                <button type="button" onclick="QRScanner.startScan('spreadsheetId')" class="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition hover:bg-blue-50 px-2 py-1 rounded">
+                                    <i class="bi bi-qr-code text-sm"></i> Scan QR
+                                </button>
+                            </div>
+                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM">
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-xs font-semibold text-gray-600">Google Apps Script Web App URL</label>
+                                <button type="button" onclick="QRScanner.startScan('apiUrl')" class="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition hover:bg-blue-50 px-2 py-1 rounded">
+                                    <i class="bi bi-qr-code text-sm"></i> Scan QR
+                                </button>
+                            </div>
+                            <input type="text" id="dbApiUrl" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="https://script.google.com/macros/s/.../exec">
+                        </div>
+                        <button type="button" onclick="App.saveConnectionSettings()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg text-sm font-semibold transition flex justify-center items-center gap-2 shadow-md hover:shadow-lg">
+                            <i class="bi bi-cloud-check-fill"></i> Simpan & Hubungkan
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ════ PWA INSTALL SECTION ════ -->
+                <div id="pwaInstallSection" class="pt-4 border-t border-gray-200">
+                    <label class="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Instalasi Aplikasi</label>
+                    <button id="btnInstallFromSettings" onclick="PWA.doInstall()" class="w-full py-3 border-2 border-dashed border-blue-300 rounded-xl font-semibold flex justify-center items-center gap-2 text-blue-600 hover:bg-blue-50 transition hidden">
+                        <i class="bi bi-download"></i> Install FulusKUpro ke Home Screen
+                    </button>
+                    <div id="pwaInstalledLabel" class="hidden text-center text-sm text-green-600 font-semibold py-2 bg-green-50 rounded-lg">
+                        <i class="bi bi-check-circle-fill"></i> Aplikasi sudah terinstall
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end border-t border-gray-200 sticky bottom-0">
+                <button onclick="App.closeModal('modal-settings')" class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition shadow-md">Selesai</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RESET VERIFY -->
+    <div id="modal-reset-verify" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-reset-verify-content">
+            <div class="px-6 py-4 border-b border-red-200 flex justify-between items-center bg-red-50">
+                <h3 class="font-bold text-lg text-red-700 flex items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Atur Ulang Semua Data
+                </h3>
+                <button onclick="App.closeModal('modal-reset-verify')" aria-label="Tutup modal reset data" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-5">
+                <p class="text-sm text-gray-700 font-medium leading-relaxed">Apakah Anda benar-benar yakin ingin menghapus <strong class="text-red-600">seluruh data transaksi dan cicilan</strong>? Tindakan ini tidak dapat dibatalkan.</p>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-gray-600 mb-2">Masukkan PIN Keamanan:</label>
+                    <input type="password" id="resetPinInput" class="w-full border-gray-300 rounded-lg p-3.5 border outline-none text-center font-bold tracking-widest text-lg focus-ring-accent" placeholder="••••••" maxlength="6">
+                    <p id="resetPinError" class="text-red-600 text-xs font-semibold mt-2 hidden flex items-center gap-1"><i class="bi bi-exclamation-circle"></i> PIN yang Anda masukkan salah!</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-200">
+                <button type="button" onclick="App.closeModal('modal-reset-verify')" class="px-5 py-2.5 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold transition">Batal</button>
+                <button type="button" onclick="App.verifyAndReset()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition shadow-md">Ya, Reset Sekarang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT TRANSACTION -->
+    <div id="modal-edit-trx" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-edit-trx-content">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900">Edit Transaksi</h3>
+                <button onclick="App.closeModal('modal-edit-trx')" aria-label="Tutup modal edit transaksi" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="trxEditForm" onsubmit="event.preventDefault(); App.submitEditTransaction();" class="space-y-5">
+                    <input type="hidden" id="editTrxId">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Tanggal</label>
+                        <input type="date" id="editTrxDate" class="w-full border-gray-300 rounded-lg p-3 border focus:ring-blue-500 focus:border-blue-500 outline-none focus-ring-accent font-medium" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Jenis</label>
+                            <select id="editTrxType" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" readonly>
+                                <option value="Pendapatan">Pendapatan</option>
+                                <option value="Pengeluaran">Pengeluaran</option>
+                                <option value="Piutang">Piutang (Memberi)</option>
+                                <option value="Cicilan">Bayar Cicilan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Kategori</label>
+                            <input type="text" id="editTrxCategory" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Gaji, Makanan, dll" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Jumlah (Rp)</label>
+                        <input type="number" id="editTrxAmount" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" min="1" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Keterangan</label>
+                        <textarea id="editTrxDesc" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" rows="2" placeholder="Opsional"></textarea>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-3">
+                        <button type="button" onclick="App.closeModal('modal-edit-trx')" class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold transition">Batal</button>
+                        <button type="submit" id="btnSubmitEditTrx" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold flex items-center gap-2 transition shadow-md">Simpan <i id="spinEditTrx" class="bi bi-arrow-repeat animate-spin hidden"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT INSTALLMENT -->
+    <div id="modal-edit-inst" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-edit-inst-content">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900">Edit Cicilan</h3>
+                <button onclick="App.closeModal('modal-edit-inst')" aria-label="Tutup modal edit cicilan" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="instEditForm" onsubmit="event.preventDefault(); App.submitEditInstallment();" class="space-y-5">
+                    <input type="hidden" id="editInstId">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Barang / Keperluan</label>
+                        <input type="text" id="editInstName" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Contoh: Cicilan Motor" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Kreditur (Pihak Peminjam)</label>
+                        <input type="text" id="editInstCreditor" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" placeholder="Contoh: Leasing ABC" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Total Nilai (Rp)</label>
+                            <input type="number" id="editInstTotal" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" min="1" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Sudah Dibayar (Rp)</label>
+                            <input type="number" id="editInstPaid" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" min="0" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Tanggal Mulai</label>
+                            <input type="date" id="editInstDate" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-800 mb-2">Jatuh Tempo</label>
+                            <input type="date" id="editInstDueDate" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-800 mb-2">Catatan Tambahan</label>
+                        <textarea id="editInstDesc" class="w-full border-gray-300 rounded-lg p-3 border outline-none focus-ring-accent font-medium" rows="2" placeholder="Opsional"></textarea>
+                    </div>
+                    <div class="pt-3 flex justify-end gap-3">
+                        <button type="button" onclick="App.closeModal('modal-edit-inst')" class="px-5 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-semibold transition">Batal</button>
+                        <button type="submit" id="btnSubmitEditInst" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold flex items-center gap-2 transition shadow-md">Simpan <i id="spinEditInst" class="bi bi-arrow-repeat animate-spin hidden"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: QR CODE SCANNER -->
+    <div id="modal-qr-scanner" class="fixed inset-0 modal-overlay hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal-qr-scanner-content">
+            <div class="px-6 py-4 border-b border-blue-200 flex justify-between items-center bg-gradient-to-r from-blue-50 to-indigo-50">
+                <h3 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+                    <i class="bi bi-qr-code text-blue-600 text-xl"></i> Pindai Kode QR
+                </h3>
+                <button onclick="QRScanner.stopScan()" aria-label="Tutup modal pemindai QR" class="text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-full p-1 transition"><i class="bi bi-x-lg text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <!-- Video Preview -->
+                <div class="relative bg-black rounded-xl overflow-hidden" style="aspect-ratio: 1;">
+                    <video id="qrScannerVideo" style="width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                    <canvas id="qrScannerCanvas" style="width: 100%; height: 100%; display: none;"></canvas>
+                    
+                    <!-- Loading/Instruction -->
+                    <div id="qrScannerLoading" class="absolute inset-0 flex flex-col items-center justify-center bg-black/70 text-white">
+                        <i class="bi bi-camera-video text-5xl mb-3 animate-pulse"></i>
+                        <p class="text-sm font-medium text-center">Memulai kamera...</p>
+                    </div>
+
+                    <!-- Corner Guide -->
+                    <div class="absolute inset-0 border-4 border-green-400 rounded-lg" style="margin: 20%; opacity: 0.3;"></div>
+                </div>
+
+                <!-- Status Info -->
+                <div id="qrScannerStatus" class="text-center text-sm text-gray-600 font-medium">
+                    Arahkan kamera ke kode QR untuk pemindaian otomatis
+                </div>
+
+                <!-- Result Display -->
+                <div id="qrScannerResult" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p class="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1"><i class="bi bi-check-circle"></i> Hasil Pindaian:</p>
+                    <p id="qrScannerResultText" class="text-sm font-mono text-gray-800 break-all bg-white p-2 rounded border border-green-100"></p>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-between gap-2 border-t border-gray-200">
+                <button type="button" onclick="QRScanner.clearResult()" class="flex-1 px-4 py-2.5 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="bi bi-arrow-repeat"></i> <span class="hidden sm:inline">Scan Ulang</span>
+                </button>
+                <button type="button" onclick="QRScanner.confirmResult()" class="flex-1 px-4 py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="bi bi-check-lg"></i> <span class="hidden sm:inline">Gunakan</span>
+                </button>
+                <button type="button" onclick="QRScanner.stopScan()" class="flex-1 px-4 py-2.5 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                    <i class="bi bi-x-lg"></i> <span class="hidden sm:inline">Tutup</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRM -->
+    <div id="modal-confirm" class="fixed inset-0 modal-overlay hidden z-[60] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-7 text-center transform scale-95 opacity-0 transition-all duration-300" id="modal-confirm-content">
+            <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl shadow-md">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h3 class="font-bold text-xl text-gray-900 mb-3" id="confirmTitle">Konfirmasi</h3>
+            <p class="text-gray-600 text-sm mb-7 leading-relaxed" id="confirmMessage">Apakah Anda yakin?</p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="App.closeConfirm()" aria-label="Batal konfirmasi" class="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold flex-1 transition">Batal</button>
+                <button id="btnConfirmYes" aria-label="Ya, lanjutkan konfirmasi" class="px-6 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-lg font-semibold flex-1 transition shadow-md">Ya, Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- GLOBAL LOADER -->
+    <div id="globalLoader" class="fixed inset-0 bg-white/80 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center">
+        <i class="bi bi-cash-coin text-5xl text-accent animate-bounce"></i>
+        <div class="text-accent font-semibold mt-4 text-lg">Memproses Data...</div>
+    </div>
+
+    <!-- ════════════════════════════════════════════
+         PWA COMPONENTS
+    ════════════════════════════════════════════ -->
+
+    <!-- Install Banner (Android/Desktop) -->
+    <div id="pwa-banner">
+        <div class="pwa-banner-icon"><i class="bi bi-cash-coin"></i></div>
+        <div class="pwa-banner-text">
+            <strong>Install FulusKUpro</strong>
+            <span>Akses cepat dari home screen</span>
+        </div>
+        <button class="pwa-btn-install" onclick="PWA.doInstall()">Install</button>
+        <button class="pwa-btn-dismiss" onclick="PWA.dismissBanner()" aria-label="Tutup banner instalasi PWA"><i class="bi bi-x"></i></button>
+    </div>
+
+    <!-- iOS Guide Modal -->
+    <div id="ios-modal">
+        <div class="ios-box">
+            <h3>📲 Tambah ke Home Screen</h3>
+            <p>Ikuti langkah berikut untuk install di iPhone / iPad (Safari):</p>
+            <div class="ios-step">
+                <div class="step-num">1</div>
+                <div class="step-text">Tap ikon <strong>Share</strong> (kotak dengan panah ke atas) di toolbar bawah Safari</div>
+            </div>
+            <div class="ios-step">
+                <div class="step-num">2</div>
+                <div class="step-text">Scroll ke bawah, pilih <strong>Add to Home Screen</strong></div>
+            </div>
+            <div class="ios-step">
+                <div class="step-num">3</div>
+                <div class="step-text">Tap <strong>Add</strong> — ikon FulusKUpro langsung muncul di home screen</div>
+            </div>
+            <button class="btn-close-ios" onclick="PWA.closeIosModal()" aria-label="Tutup panduan iOS">Mengerti</button>
+        </div>
+    </div>
+
+    <!-- Update Banner -->
+    <div id="update-banner">
+        <i class="bi bi-arrow-repeat"></i>
+        <span>Versi terbaru tersedia</span>
+        <button onclick="location.reload()">Muat Ulang</button>
+    </div>
+
+    <!-- Installed Toast -->
+    <div id="installed-toast">✓ FulusKUpro berhasil diinstall!</div>
+
+    <!-- ════ MOBILE BOTTOM NAVIGATION ════ -->
+    <nav id="mobile-bottom-nav" aria-label="Navigasi utama mobile">
+        <button onclick="App.switchView('dashboard')" class="mob-nav-item active" data-target="dashboard" aria-label="Dashboard">
+            <i class="bi bi-grid-1x2-fill"></i>
+            <span>Dashboard</span>
+        </button>
+        <button onclick="App.switchView('transactions')" class="mob-nav-item" data-target="transactions" aria-label="Transaksi">
+            <i class="bi bi-wallet2"></i>
+            <span>Transaksi</span>
+        </button>
+        <button onclick="App.handleMobileAdd()" class="mob-nav-add-btn" aria-label="Tambah Baru">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+        <button onclick="App.switchView('installments')" class="mob-nav-item" data-target="installments" aria-label="Cicilan">
+            <i class="bi bi-credit-card"></i>
+            <span>Cicilan</span>
+        </button>
+        <button onclick="App.openModal('modal-settings')" class="mob-nav-item" data-target="settings" aria-label="Pengaturan">
+            <i class="bi bi-gear"></i>
+            <span>Pengaturan</span>
+        </button>
+    </nav>
+
+    <script>
+    // ════════════════════════════════════════════════════════
+    //  FULLSCREEN CONTROLLER
+    //  Hanya aktif di browser — tidak muncul di PWA standalone
+    // ════════════════════════════════════════════════════════
+    const FS = {
+        isFullscreen: function() {
+            return !!(
+                document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement
+            );
+        },
+
+        toggle: function() {
+            if (this.isFullscreen()) {
+                this.exit();
+            } else {
+                this.request();
+            }
+        },
+
+        request: function() {
+            const el = document.documentElement;
+            const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+            if (fn) fn.call(el).catch(err => console.warn('[FS] Gagal masuk fullscreen:', err));
+        },
+
+        exit: function() {
+            const fn = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+            if (fn) fn.call(document);
+        },
+
+        updateIcon: function() {
+            const icon = document.getElementById('fs-icon');
+            const btn  = document.getElementById('btn-fullscreen');
+            if (!icon || !btn) return;
+            if (this.isFullscreen()) {
+                icon.className = 'bi bi-fullscreen-exit text-lg';
+                btn.title = 'Keluar Layar Penuh';
+            } else {
+                icon.className = 'bi bi-fullscreen text-lg';
+                btn.title = 'Layar Penuh';
+            }
+        },
+
+        init: function() {
+            // Update icon saat fullscreen berubah (keyboard Esc, F11, dll)
+            ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'].forEach(evt => {
+                document.addEventListener(evt, () => this.updateIcon());
+            });
+
+            // Sembunyikan tombol jika sudah di PWA standalone
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                               || window.navigator.standalone === true;
+            if (isStandalone) {
+                const btn = document.getElementById('btn-fullscreen');
+                if (btn) btn.style.display = 'none';
+            }
+        }
+    };
+    </script>
+
+    <script>
+    // ════════════════════════════════════════════════════════
+    //  PWA CONTROLLER
+    // ════════════════════════════════════════════════════════
+    const PWA = {
+        deferredPrompt: null,
+
+        init: function() {
+            const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                              || window.navigator.standalone === true;
+            const isDismissed = sessionStorage.getItem('fulusku-pwa-dismissed');
+
+            // Sudah running sebagai PWA
+            if (isStandalone) {
+                this._showInstalledState();
+                return;
+            }
+
+            // Android / Chrome / Edge: tangkap beforeinstallprompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                this.deferredPrompt = e;
+                if (!isDismissed) {
+                    setTimeout(() => {
+                        document.getElementById('pwa-banner').classList.add('show');
+                        // Tampilkan tombol install di modal settings juga
+                        const btn = document.getElementById('btnInstallFromSettings');
+                        if (btn) btn.classList.remove('hidden');
+                    }, 2000);
+                }
+            });
+
+            // iOS Safari: panduan manual
+            if (isIos && !isStandalone && !isDismissed) {
+                setTimeout(() => {
+                    document.getElementById('ios-modal').classList.add('show');
+                }, 2000);
+            }
+
+            // Setelah berhasil install
+            window.addEventListener('appinstalled', () => {
+                document.getElementById('pwa-banner').classList.remove('show');
+                this._showInstalledState();
+                const toast = document.getElementById('installed-toast');
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3500);
+                this.deferredPrompt = null;
+            });
+
+            // Online / Offline detection
+            window.addEventListener('online', () => {
+                document.getElementById('offline-badge').classList.remove('show');
+                // Sync offline queue saat kembali online
+                App.syncOfflineQueue();
+            });
+            window.addEventListener('offline', () => {
+                document.getElementById('offline-badge').classList.add('show');
+            });
+            // Cek status awal
+            if (!navigator.onLine) {
+                document.getElementById('offline-badge').classList.add('show');
+            }
+
+            // Register Service Worker
+            // ⚠️ PENTING: jangan wrap dalam window.addEventListener('load',...) di sini
+            // karena PWA.init() sudah dipanggil dari window.onload — event 'load' sudah fired!
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => {
+                        console.log('[SW] Registered, scope:', reg.scope);
+                        // Cek update SW
+                        reg.addEventListener('updatefound', () => {
+                            const newWorker = reg.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('[SW] Update tersedia.');
+                                    // Tampilkan banner update yang rapi
+                                    const banner = document.getElementById('update-banner');
+                                    if (banner) {
+                                        banner.classList.add('show');
+                                        // Auto-hide setelah 5 detik
+                                        setTimeout(() => banner.classList.remove('show'), 5000);
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(err => console.warn('[SW] Registrasi gagal:', err));
+            }
+        },
+
+        doInstall: function() {
+            if (!this.deferredPrompt) return;
+            document.getElementById('pwa-banner').classList.remove('show');
+            this.deferredPrompt.prompt();
+            this.deferredPrompt.userChoice.then(choice => {
+                if (choice.outcome === 'accepted') {
+                    console.log('[PWA] User accepted install');
+                }
+                this.deferredPrompt = null;
+                const btn = document.getElementById('btnInstallFromSettings');
+                if (btn) btn.classList.add('hidden');
+            });
+        },
+
+        dismissBanner: function() {
+            document.getElementById('pwa-banner').classList.remove('show');
+            sessionStorage.setItem('fulusku-pwa-dismissed', '1');
+        },
+
+        closeIosModal: function() {
+            document.getElementById('ios-modal').classList.remove('show');
+            sessionStorage.setItem('fulusku-pwa-dismissed', '1');
+        },
+
+        _showInstalledState: function() {
+            const label = document.getElementById('pwaInstalledLabel');
+            const btn   = document.getElementById('btnInstallFromSettings');
+            if (label) label.classList.remove('hidden');
+            if (btn)   btn.classList.add('hidden');
+        }
+    };
+
+    // ════════════════════════════════════════════════════════
+    //  QR CODE SCANNER CONTROLLER
+    // ════════════════════════════════════════════════════════
+    const QRScanner = {
+        currentTarget: null,
+        scannedResult: null,
+        videoStream: null,
+        animationId: null,
+
+        startScan: function(target) {
+            this.currentTarget = target;
+            this.scannedResult = null;
+            App.openModal('modal-qr-scanner');
+            
+            setTimeout(() => {
+                this.initCamera();
+            }, 300);
+        },
+
+        initCamera: function() {
+            const video = document.getElementById('qrScannerVideo');
+            const loading = document.getElementById('qrScannerLoading');
+            const result = document.getElementById('qrScannerResult');
+            const resultText = document.getElementById('qrScannerResultText');
+            
+            result.classList.add('hidden');
+            resultText.textContent = '';
+            loading.style.display = 'flex';
+            video.style.display = 'block';
+
+            navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                } 
+            })
+            .then(stream => {
+                this.videoStream = stream;
+                video.srcObject = stream;
+                video.setAttribute('playsinline', true);
+                video.play();
+                
+                video.onloadedmetadata = () => {
+                    loading.style.display = 'none';
+                    this.scanFrame();
+                };
+            })
+            .catch(err => {
+                console.error('Camera error:', err);
+                loading.innerHTML = '<i class="bi bi-exclamation-triangle text-4xl mb-2 text-red-400"></i><p class="text-sm font-medium text-center">Tidak dapat mengakses kamera.<br/>Pastikan aplikasi memiliki izin kamera.</p>';
+                App.showToast('Error', 'Tidak dapat mengakses kamera. Berikan izin di pengaturan browser.', 'error');
+            });
+        },
+
+        scanFrame: function() {
+            const video = document.getElementById('qrScannerVideo');
+            const canvas = document.getElementById('qrScannerCanvas');
+            const context = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            if (canvas.width > 0 && canvas.height > 0) {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+                if (code && !this.scannedResult) {
+                    this.scannedResult = code.data;
+                    this.displayResult(code.data);
+                    // Auto stop video saat berhasil scan
+                    this.stopVideoStream();
+                    return;
+                }
+            }
+
+            if (this.videoStream && this.videoStream.active && !this.scannedResult) {
+                this.animationId = requestAnimationFrame(() => this.scanFrame());
+            }
+        },
+
+        displayResult: function(data) {
+            const result = document.getElementById('qrScannerResult');
+            const resultText = document.getElementById('qrScannerResultText');
+            
+            resultText.textContent = data;
+            result.classList.remove('hidden');
+            
+            const status = document.getElementById('qrScannerStatus');
+            status.innerHTML = '<i class="bi bi-check-circle-fill text-green-500"></i> Kode QR berhasil dipindai!';
+            status.className = 'text-center text-sm text-green-600 font-medium';
+        },
+
+        confirmResult: function() {
+            if (!this.scannedResult) {
+                App.showToast('Peringatan', 'Belum ada hasil pindaian.', 'error');
+                return;
+            }
+
+            const inputId = this.currentTarget === 'spreadsheetId' ? 'dbSpreadsheetId' : 'dbApiUrl';
+            document.getElementById(inputId).value = this.scannedResult;
+            
+            App.showToast('Sukses', 'Hasil QR code berhasil diisi.', 'success');
+            this.stopScan();
+        },
+
+        clearResult: function() {
+            this.scannedResult = null;
+            const result = document.getElementById('qrScannerResult');
+            const status = document.getElementById('qrScannerStatus');
+            
+            result.classList.add('hidden');
+            status.innerHTML = 'Arahkan kamera ke kode QR untuk pemindaian otomatis';
+            status.className = 'text-center text-sm text-gray-600';
+
+            const video = document.getElementById('qrScannerVideo');
+            if (video.paused) {
+                video.play();
+                this.scanFrame();
+            }
+        },
+
+        stopVideoStream: function() {
+            const video = document.getElementById('qrScannerVideo');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+            }
+            this.videoStream = null;
+        },
+
+        stopScan: function() {
+            this.stopVideoStream();
+            this.currentTarget = null;
+            this.scannedResult = null;
+            App.closeModal('modal-qr-scanner');
+        }
+    };
+
+    // ════════════════════════════════════════════════════════
+    //  OFFLINE QUEUE SYSTEM (Simpan & Sync data saat offline)
+    // ════════════════════════════════════════════════════════
+    class OfflineQueue {
+        constructor(dbName = 'fulusku-offline-queue') {
+            this.dbName = dbName;
+            this.db = null;
+            this.isPending = false;
+        }
+
+        async init() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(this.dbName, 1);
+                req.onerror = () => reject(req.error);
+                req.onsuccess = () => {
+                    this.db = req.result;
+                    resolve();
+                };
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('requests')) {
+                        db.createObjectStore('requests', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        async add(functionName, args) {
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction(['requests'], 'readwrite');
+                const store = tx.objectStore('requests');
+                const item = { functionName, args, timestamp: Date.now(), synced: false };
+                const req = store.add(item);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async getAll() {
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction(['requests'], 'readonly');
+                const store = tx.objectStore('requests');
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async remove(id) {
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction(['requests'], 'readwrite');
+                const store = tx.objectStore('requests');
+                const req = store.delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async getPendingCount() {
+            const items = await this.getAll();
+            return items.filter(i => !i.synced).length;
+        }
+    }
+
+    // ════════════════════════════════════════════════════════
+    //  APP CONTROLLER
+    // ════════════════════════════════════════════════════════
+    const App = {
+        user: null,
+        transactions: [],
+        installments: [],
+        offlineQueue: new OfflineQueue(),
+        
+        formatRupiah: function(number) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number || 0);
+        },
+        
+        formatDate: function(dateStr) {
+            if (!dateStr) return '-';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+        },
+
+        api: function(functionName, ...args) {
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                return new Promise((resolve, reject) => {
+                    google.script.run
+                        .withSuccessHandler(res => {
+                            if (res && typeof res === 'object') resolve(res);
+                            else resolve(JSON.parse(res));
+                        })
+                        .withFailureHandler(err => reject(err))
+                        [functionName](...args);
+                });
+            } else {
+                const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+                const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+                
+                if (!apiUrl) {
+                    return Promise.reject(new Error('URL API Google Apps Script belum dikonfigurasi! Silakan atur dengan mengklik ikon Roda Gigi (gear) di kanan atas.'));
+                }
+                
+                return fetch(apiUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: JSON.stringify({
+                        action: functionName,
+                        arguments: args,
+                        spreadsheetId: spreadsheetId
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Respons jaringan tidak oke: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(res => {
+                    if (res && res.success !== undefined) {
+                        return res;
+                    }
+                    return JSON.parse(res);
+                })
+                .catch(err => {
+                    // OFFLINE QUEUE: Jika offline & operasi simpan/update, queue-nya
+                    if (!navigator.onLine && ['addTransaction', 'updateTransaction', 'addInstallment', 'updateInstallment'].includes(functionName)) {
+                        return this.offlineQueue.add(functionName, args).then(id => {
+                            this.updatePendingBadge();
+                            return {
+                                success: true,
+                                data: null,
+                                message: '📱 Data disimpan lokal. Akan tersinkronisasi otomatis saat online.',
+                                offline: true,
+                                queueId: id
+                            };
+                        }).catch(queueErr => {
+                            throw new Error('Gagal menyimpan data lokal: ' + queueErr.message);
+                        });
+                    }
+                    throw err;
+                });
+            }
+        },
+
+        updatePendingBadge: async function() {
+            try {
+                const count = await this.offlineQueue.getPendingCount();
+                const badge = document.getElementById('pending-sync-badge');
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch(e) {
+                console.log('Badge update error:', e);
+            }
+        },
+
+        syncOfflineQueue: async function() {
+            if (this.offlineQueue.isPending) return; // Hindari double sync
+            
+            try {
+                this.offlineQueue.isPending = true;
+                const items = await this.offlineQueue.getAll();
+                const unsyncedItems = items.filter(i => !i.synced);
+                
+                if (unsyncedItems.length === 0) {
+                    console.log('Tidak ada item untuk disinkronisasi.');
+                    this.updatePendingBadge();
+                    return;
+                }
+                
+                console.log(`🔄 Mensinkronisasi ${unsyncedItems.length} item offline...`);
+                this.showToast('Sinkronisasi', `Mensinkronisasi ${unsyncedItems.length} item yang tertunda...`);
+                
+                let successCount = 0;
+                for (const item of unsyncedItems) {
+                    try {
+                        const res = await this._apiDirect(item.functionName, ...item.args);
+                        if (res.success) {
+                            await this.offlineQueue.remove(item.id);
+                            successCount++;
+                        }
+                    } catch(e) {
+                        console.log(`Gagal sinkronisasi item ${item.id}:`, e.message);
+                    }
+                }
+                
+                this.showToast('Sukses', `${successCount}/${unsyncedItems.length} item tersinkronisasi.`);
+                if (successCount > 0) {
+                    this.refreshData();
+                }
+                this.updatePendingBadge();
+            } catch(e) {
+                console.error('Sync error:', e);
+                this.showToast('Error', 'Gagal sinkronisasi: ' + e.message, 'error');
+            } finally {
+                this.offlineQueue.isPending = false;
+            }
+        },
+
+        _apiDirect: function(functionName, ...args) {
+            const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+            
+            if (!apiUrl) {
+                return Promise.reject(new Error('URL API belum dikonfigurasi.'));
+            }
+            
+            return fetch(apiUrl, {
+                method: 'POST',
+                mode: 'cors',
+                body: JSON.stringify({
+                    action: functionName,
+                    arguments: args,
+                    spreadsheetId: spreadsheetId
+                })
+            })
+            .then(response => response.json());
+        },
+
+        showLoading: function(show) {
+            document.getElementById('globalLoader').style.display = show ? 'flex' : 'none';
+        },
+
+        showToast: function(title, message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const icon = type === 'success'
+                ? '<i class="bi bi-check-circle-fill text-green-500"></i>'
+                : '<i class="bi bi-x-circle-fill text-red-500"></i>';
+            toast.className = `bg-white border-l-4 ${type === 'success' ? 'border-green-500' : 'border-red-500'} shadow-lg rounded p-4 flex gap-3 items-start min-w-[250px] toast-animate pointer-events-auto`;
+            toast.innerHTML = `<div class="text-xl">${icon}</div><div><h4 class="font-bold text-gray-800 text-sm">${title}</h4><p class="text-gray-600 text-xs mt-1">${message}</p></div>`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        },
+
+        openModal: function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + '-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            if (id === 'modal-add-trx') document.getElementById('trxDate').valueAsDate = new Date();
+            if (id === 'modal-add-inst') {
+                document.getElementById('instDate').valueAsDate = new Date();
+                document.getElementById('instDueDate').value = '';
+            }
+        },
+
+        closeModal: function(id) {
+            const modal = document.getElementById(id);
+            const content = document.getElementById(id + '-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            if (id === 'modal-add-trx') { document.getElementById('trxForm').reset(); document.getElementById('trxDate').valueAsDate = new Date(); }
+            if (id === 'modal-add-inst') {
+                document.getElementById('instForm').reset();
+                document.getElementById('instDate').valueAsDate = new Date();
+                document.getElementById('instDueDate').value = '';
+            }
+        },
+
+        openConfirm: function(title, message, onConfirm) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            document.getElementById('btnConfirmYes').onclick = () => { onConfirm(); };
+            this.openModal('modal-confirm');
+        },
+
+        closeConfirm: function() { this.closeModal('modal-confirm'); },
+
+        switchView: function(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-accent', 'border-b-2', 'border-accent'));
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            const btn = document.querySelector(`.nav-item[data-target="${viewId}"]`);
+            if (btn) {
+                btn.classList.add('active', 'text-accent', 'border-b-2', 'border-accent');
+                btn.classList.remove('text-gray-500');
+            }
+            // Sync mobile bottom nav
+            this.syncMobileNav(viewId);
+        },
+
+        syncMobileNav: function(viewId) {
+            const mobNav = document.getElementById('mobile-bottom-nav');
+            if (!mobNav) return;
+            // Icon mapping: fill for active, outline for inactive
+            const iconMap = {
+                dashboard:    { active: 'bi-grid-1x2-fill', inactive: 'bi-grid-1x2' },
+                transactions: { active: 'bi-wallet-fill', inactive: 'bi-wallet2' },
+                installments: { active: 'bi-credit-card-fill', inactive: 'bi-credit-card' },
+                settings:     { active: 'bi-gear-fill', inactive: 'bi-gear' }
+            };
+            mobNav.querySelectorAll('.mob-nav-item').forEach(item => {
+                const target = item.getAttribute('data-target');
+                const icon = item.querySelector('i');
+                if (target === viewId) {
+                    item.classList.add('active');
+                    if (iconMap[target]) {
+                        icon.className = 'bi ' + iconMap[target].active;
+                    }
+                } else {
+                    item.classList.remove('active');
+                    if (iconMap[target]) {
+                        icon.className = 'bi ' + iconMap[target].inactive;
+                    }
+                }
+            });
+        },
+
+        handleMobileAdd: function() {
+            // Determine which add modal to open based on current active view
+            const activeView = document.querySelector('.view-section:not(.hidden)');
+            if (activeView) {
+                const id = activeView.id;
+                if (id === 'view-installments') {
+                    this.openModal('modal-add-inst');
+                } else {
+                    this.openModal('modal-add-trx');
+                }
+            } else {
+                this.openModal('modal-add-trx');
+            }
+        },
+
+        login: async function() {
+            const user = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+            const errDiv = document.getElementById('loginError');
+            const btnText = document.getElementById('loginText');
+            const spinner = document.getElementById('loginSpinner');
+            errDiv.classList.add('hidden');
+            btnText.innerText = 'Memproses...';
+            spinner.classList.remove('hidden');
+            document.getElementById('btnLogin').disabled = true;
+            try {
+                const res = await this.api('loginUser', user, pass);
+                if (res.success) {
+                    this.user = res.data || { id: 'usr_1', username: 'Admin' };
+                    localStorage.setItem('fulusku_user', JSON.stringify(this.user)); // Simpan sesi
+                    document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
+                    document.getElementById('loginScreen').classList.remove('active-screen');
+                    document.getElementById('loginScreen').classList.add('hidden-screen');
+                    setTimeout(() => {
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainApp').classList.remove('hidden-screen');
+                        document.getElementById('mainApp').classList.add('active-screen');
+                    }, 300);
+                    this.refreshData();
+                } else { throw new Error(res.message); }
+            } catch(e) {
+                errDiv.innerText = e.message;
+                errDiv.classList.remove('hidden');
+            } finally {
+                btnText.innerText = 'Masuk';
+                spinner.classList.add('hidden');
+                document.getElementById('btnLogin').disabled = false;
+            }
+        },
+
+        logout: function() {
+            this.user = null;
+            localStorage.removeItem('fulusku_user'); // Hapus sesi
+            document.getElementById('mainApp').classList.remove('active-screen');
+            document.getElementById('mainApp').classList.add('hidden-screen');
+            setTimeout(() => {
+                const loginScreen = document.getElementById('loginScreen');
+                loginScreen.style.display = 'flex';
+                setTimeout(() => {
+                    loginScreen.classList.remove('hidden-screen');
+                    loginScreen.classList.add('active-screen');
+                }, 50);
+            }, 300);
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        },
+
+        askResetData: function() {
+            document.getElementById('resetPinInput').value = '';
+            document.getElementById('resetPinError').classList.add('hidden');
+            this.openModal('modal-reset-verify');
+        },
+
+        verifyAndReset: function() {
+            const pin = document.getElementById('resetPinInput').value.trim();
+            if (pin === '399339') {
+                this.closeModal('modal-reset-verify');
+                this.resetAllData();
+            } else {
+                document.getElementById('resetPinError').classList.remove('hidden');
+            }
+        },
+
+        resetAllData: async function() {
+            this.showLoading(true);
+            try {
+                const res = await this.api('resetDatabase');
+                if (res.success) {
+                    this.showToast('Berhasil', 'Seluruh data telah di-reset ke nol.');
+                    await this.refreshData();
+                } else throw new Error(res.message);
+            } catch(e) {
+                this.showToast('Gagal', e.message, 'error');
+            } finally {
+                this.showLoading(false);
+            }
+        },
+
+        refreshData: async function() {
+            this.showLoading(true);
+            try {
+                const [dashRes, trxRes, instRes] = await Promise.all([
+                    this.api('getDashboardData'),
+                    this.api('getTransactions'),
+                    this.api('getInstallments')
+                ]);
+                if (dashRes.success) this.renderDashboard(dashRes.data);
+                if (trxRes.success) { this.transactions = trxRes.data; this.renderTransactions(); }
+                if (instRes.success) {
+                    this.installments = instRes.data;
+                    this.populateCreditorFilter();
+                    this.filterByCreditor();
+                    this.renderCreditorWidget();
+                }
+                document.getElementById('trxDate').valueAsDate = new Date();
+                document.getElementById('instDate').valueAsDate = new Date();
+                document.getElementById('instDueDate').value = '';
+            } catch(e) {
+                this.showToast('Error', 'Gagal memuat data dari database: ' + e.message, 'error');
+            } finally {
+                this.showLoading(false);
+            }
+        },
+
+        renderDashboard: function(data) {
+            document.getElementById('dashBalance').innerText = this.formatRupiah(data.balance);
+            document.getElementById('dashIncome').innerText = this.formatRupiah(data.income);
+            document.getElementById('dashExpense').innerText = this.formatRupiah(data.expense);
+            document.getElementById('dashDebt').innerText = this.formatRupiah((data.debt || 0) + (data.installmentOutstanding || 0));
+            document.getElementById('dashReceivable').innerText = this.formatRupiah(data.receivable);
+            document.getElementById('dashTotalInstallmentOutstanding').innerText = 'Total Sisa: ' + this.formatRupiah(data.installmentOutstanding);
+        },
+
+        renderCreditorWidget: function() {
+            const container = document.getElementById('creditorWidgetList');
+            container.innerHTML = '';
+            const creditorMap = {};
+            this.installments.forEach(inst => {
+                if (inst.status !== 'Lunas') {
+                    const cred = inst.creditor || 'Lainnya';
+                    if (!creditorMap[cred]) creditorMap[cred] = 0;
+                    creditorMap[cred] += inst.remaining;
+                }
+            });
+            const creditors = Object.keys(creditorMap).sort((a, b) => creditorMap[b] - creditorMap[a]);
+            if (creditors.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400 text-sm py-4">Tidak ada tagihan cicilan aktif.</div>';
+                return;
+            }
+            creditors.forEach(cred => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-50 hover:bg-accent-light border border-gray-100 p-3 rounded-lg cursor-pointer transition flex flex-col";
+                div.onclick = () => {
+                    this.switchView('installments');
+                    const filter = document.getElementById('creditorFilter');
+                    if (filter.querySelector(`option[value="${cred}"]`)) filter.value = cred;
+                    this.filterByCreditor();
+                };
+                div.innerHTML = `<span class="text-xs text-gray-500 font-medium truncate" title="${cred}">${cred}</span><span class="text-sm font-bold text-gray-800 mt-1">${this.formatRupiah(creditorMap[cred])}</span>`;
+                container.appendChild(div);
+            });
+        },
+
+        renderTransactions: function() {
+            const tbody = document.getElementById('trxTableBody');
+            const listBody = document.getElementById('trxListBody');
+
+            tbody.innerHTML = '';
+            listBody.innerHTML = '';
+
+            if (this.transactions.length === 0) {
+                document.getElementById('trxEmpty').classList.remove('hidden');
+                document.getElementById('trxEmptyMobile').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('trxEmpty').classList.add('hidden');
+            document.getElementById('trxEmptyMobile').classList.add('hidden');
+
+            this.transactions.forEach(trx => {
+                let badgeClass = 'badge-neutral';
+                if (trx.type === 'Pendapatan' || trx.type === 'Piutang') badgeClass = 'badge-success';
+                else if (trx.type === 'Pengeluaran' || trx.type === 'Cicilan') badgeClass = 'badge-danger';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td class="px-4 py-3">${this.formatDate(trx.date)}</td><td class="px-4 py-3"><span class="badge ${badgeClass}">${trx.type}</span></td><td class="px-4 py-3 font-medium">${trx.category}</td><td class="px-4 py-3 text-gray-500 max-w-[150px] truncate" title="${trx.description}">${trx.description || '-'}</td><td class="px-4 py-3 text-right font-bold">${this.formatRupiah(trx.amount)}</td><td class="px-4 py-3 text-center flex gap-1 justify-center"><button onclick="App.editTransaction('${trx.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-lg" title="Edit"><i class="bi bi-pencil"></i></button><button onclick="App.deleteTransaction('${trx.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg" title="Hapus"><i class="bi bi-trash"></i></button></td>`;
+                tbody.appendChild(tr);
+
+                // Mobile card/list
+                const item = document.createElement('div');
+                item.className = 'p-4 rounded-2xl border border-gray-100 bg-white/70 backdrop-blur card-hover';
+                item.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="text-sm font-bold text-gray-900 truncate" title="${trx.category}">${trx.category}</div>
+                            <div class="text-xs text-gray-500 mt-1">${this.formatDate(trx.date)} • <span class="font-medium">${trx.type}</span></div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-sm font-bold text-gray-900">${this.formatRupiah(trx.amount)}</div>
+                            <div class="mt-1">${trx.description ? `<div class="text-xs text-gray-500 truncate max-w-[120px]" title="${trx.description}">${trx.description}</div>` : `<div class="text-xs text-gray-400">-</div>`}</div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex items-center justify-between gap-3">
+                        <span class="badge ${badgeClass}">${trx.type}</span>
+                        <div class="flex gap-2">
+                            <button onclick="App.editTransaction('${trx.id}')" class="text-blue-600 hover:text-blue-700 bg-blue-50 p-2 rounded-xl transition" title="Edit" aria-label="Edit transaksi"><i class="bi bi-pencil"></i></button>
+                            <button onclick="App.deleteTransaction('${trx.id}')" class="text-red-600 hover:text-red-700 bg-red-50 p-2 rounded-xl transition" title="Hapus" aria-label="Hapus transaksi"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                listBody.appendChild(item);
+            });
+        },
+
+        handleTrxTypeChange: function() {
+            const type = document.getElementById('trxType').value;
+            const catWrap = document.getElementById('trxCategoryWrapper');
+            const instWrap = document.getElementById('trxInstallmentWrapper');
+            const catInput = document.getElementById('trxCategory');
+            if (type === 'Cicilan') {
+                catWrap.classList.add('hidden');
+                instWrap.classList.remove('hidden');
+                catInput.removeAttribute('required');
+                const select = document.getElementById('trxInstallmentId');
+                select.innerHTML = '<option value="">-- Pilih Cicilan Aktif --</option>';
+                this.installments.filter(i => i.status !== 'Lunas').forEach(i => {
+                    select.innerHTML += `<option value="${i.id}">${i.name} (${i.creditor}) - Sisa: ${this.formatRupiah(i.remaining)}</option>`;
+                });
+            } else {
+                catWrap.classList.remove('hidden');
+                instWrap.classList.add('hidden');
+                catInput.setAttribute('required', 'true');
+            }
+        },
+
+        submitTransaction: async function() {
+            const type = document.getElementById('trxType').value;
+            const data = {
+                date: document.getElementById('trxDate').value,
+                type: type,
+                category: type === 'Cicilan' ? 'Pembayaran Cicilan' : document.getElementById('trxCategory').value,
+                amount: parseFloat(document.getElementById('trxAmount').value),
+                description: document.getElementById('trxDesc').value,
+                installment_id: type === 'Cicilan' ? document.getElementById('trxInstallmentId').value : null
+            };
+            if (type === 'Cicilan' && !data.installment_id) {
+                this.showToast('Peringatan', 'Silakan pilih cicilan yang akan dibayar.', 'error');
+                return;
+            }
+            document.getElementById('spinTrx').classList.remove('hidden');
+            document.getElementById('btnSubmitTrx').disabled = true;
+            try {
+                const res = await this.api('addTransaction', data);
+                if (res.success) {
+                    this.showToast('Sukses', 'Transaksi berhasil ditambahkan.');
+                    this.closeModal('modal-add-trx');
+                    this.refreshData();
+                } else throw new Error(res.message);
+            } catch(e) {
+                this.showToast('Gagal', e.message, 'error');
+            } finally {
+                document.getElementById('spinTrx').classList.add('hidden');
+                document.getElementById('btnSubmitTrx').disabled = false;
+            }
+        },
+
+        deleteTransaction: function(id) {
+            this.openConfirm('Hapus Transaksi', 'Apakah Anda yakin ingin menghapus data ini?', async () => {
+                this.closeConfirm();
+                this.showLoading(true);
+                try {
+                    const res = await this.api('deleteTransaction', id);
+                    if (res.success) { this.showToast('Sukses', 'Transaksi dihapus.'); this.refreshData(); }
+                    else throw new Error(res.message);
+                } catch(e) { this.showToast('Gagal', e.message, 'error'); }
+                finally { this.showLoading(false); }
+            });
+        },
+
+        editTransaction: function(id) {
+            const trx = this.transactions.find(t => t.id === id);
+            if (!trx) return;
+            document.getElementById('editTrxId').value = trx.id;
+            document.getElementById('editTrxDate').value = trx.date ? trx.date.split('T')[0] : '';
+            document.getElementById('editTrxType').value = trx.type;
+            document.getElementById('editTrxCategory').value = trx.category;
+            document.getElementById('editTrxAmount').value = trx.amount;
+            document.getElementById('editTrxDesc').value = trx.description || '';
+            this.openModal('modal-edit-trx');
+        },
+
+        submitEditTransaction: async function() {
+            const data = {
+                id: document.getElementById('editTrxId').value,
+                date: document.getElementById('editTrxDate').value,
+                type: document.getElementById('editTrxType').value,
+                category: document.getElementById('editTrxCategory').value,
+                amount: parseFloat(document.getElementById('editTrxAmount').value),
+                description: document.getElementById('editTrxDesc').value,
+                status: 'Selesai'
+            };
+            document.getElementById('spinEditTrx').classList.remove('hidden');
+            document.getElementById('btnSubmitEditTrx').disabled = true;
+            try {
+                const res = await this.api('updateTransaction', data);
+                if (res.success) {
+                    this.showToast('Sukses', 'Transaksi berhasil diperbarui.');
+                    this.closeModal('modal-edit-trx');
+                    this.refreshData();
+                } else throw new Error(res.message);
+            } catch(e) {
+                this.showToast('Gagal', e.message, 'error');
+            } finally {
+                document.getElementById('spinEditTrx').classList.add('hidden');
+                document.getElementById('btnSubmitEditTrx').disabled = false;
+            }
+        },
+
+        populateCreditorFilter: function() {
+            const filterSelect = document.getElementById('creditorFilter');
+            const datalist = document.getElementById('existingCreditors');
+            const currentSelected = filterSelect.value;
+            const creditors = [...new Set(this.installments.map(inst => inst.creditor).filter(Boolean))];
+            filterSelect.innerHTML = '<option value="all">-- Semua Kreditur --</option>';
+            if (datalist) datalist.innerHTML = '';
+            creditors.forEach(cred => {
+                const opt = document.createElement('option');
+                opt.value = cred; opt.textContent = cred;
+                filterSelect.appendChild(opt);
+                if (datalist) { const dlOpt = document.createElement('option'); dlOpt.value = cred; datalist.appendChild(dlOpt); }
+            });
+            filterSelect.value = creditors.includes(currentSelected) ? currentSelected : 'all';
+        },
+
+        filterByCreditor: function() {
+            const selected = document.getElementById('creditorFilter').value;
+            const filtered = selected === 'all' ? this.installments : this.installments.filter(i => i.creditor === selected);
+            let sumTotal = 0, sumPaid = 0, sumRemaining = 0;
+            filtered.forEach(i => { sumTotal += i.total_amount; sumPaid += i.paid_amount; sumRemaining += i.remaining; });
+            document.getElementById('recapTotalAmount').innerText = this.formatRupiah(sumTotal);
+            document.getElementById('recapPaidAmount').innerText = this.formatRupiah(sumPaid);
+            document.getElementById('recapRemaining').innerText = this.formatRupiah(sumRemaining);
+            this.renderInstallments(filtered);
+        },
+
+        renderInstallments: function(dataList) {
+            const tbody = document.getElementById('instTableBody');
+            const listBody = document.getElementById('instListBody');
+
+            tbody.innerHTML = '';
+            listBody.innerHTML = '';
+
+            if (dataList.length === 0) {
+                document.getElementById('instEmpty').classList.remove('hidden');
+                document.getElementById('instEmptyMobile').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('instEmpty').classList.add('hidden');
+            document.getElementById('instEmptyMobile').classList.add('hidden');
+
+            const statusToBadge = (status) => {
+                if (status === 'Lunas') return { cls: 'badge-success', icon: 'bi-check-circle' };
+                return { cls: 'badge-warning', icon: 'bi-clock' };
+            };
+
+            dataList.forEach(inst => {
+                const statusBadge = statusToBadge(inst.status);
+
+                // Desktop row
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-3">
+                        <div class="font-bold">${inst.name}</div>
+                        <div class="text-xs text-gray-400">
+                            Mulai: ${this.formatDate(inst.start_date)}
+                        </div>
+                        ${inst.due_date ? `
+                            <div class="text-xs text-red-500 font-semibold mt-0.5">
+                                <i class="bi bi-calendar-event"></i> Jatuh Tempo: ${this.formatDate(inst.due_date)}
+                            </div>
+                        ` : ''}
+                    </td>
+                    <td class="px-4 py-3 font-medium text-gray-700">${inst.creditor}</td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="font-bold">${this.formatRupiah(inst.total_amount)}</div>
+                        <div class="text-xs text-green-500">Dibayar: ${this.formatRupiah(inst.paid_amount)}</div>
+                    </td>
+                    <td class="px-4 py-3 text-right font-bold text-red-500">${this.formatRupiah(inst.remaining)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <span class="badge ${statusBadge.cls}"><i class="bi ${statusBadge.icon}"></i> ${inst.status}</span>
+                    </td>
+                    <td class="px-4 py-3 text-center flex gap-1 justify-center">
+                        <button onclick="App.editInstallment('${inst.id}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 p-1.5 rounded-lg" title="Edit" aria-label="Edit cicilan"><i class="bi bi-pencil"></i></button>
+                        <button onclick="App.deleteInstallment('${inst.id}')" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded-lg" title="Hapus" aria-label="Hapus cicilan"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile card/list
+                const item = document.createElement('div');
+                item.className = 'p-4 rounded-2xl border border-gray-100 bg-white/70 backdrop-blur card-hover';
+                item.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span class="badge ${statusBadge.cls}">
+                                    <i class="bi ${statusBadge.icon}"></i> ${inst.status}
+                                </span>
+                                <span class="text-xs text-gray-500 font-medium truncate" title="${inst.creditor}">${inst.creditor}</span>
+                            </div>
+                            <div class="font-bold text-gray-900 truncate">${inst.name}</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Sisa: <span class="font-semibold text-red-500">${this.formatRupiah(inst.remaining)}</span>
+                                ${inst.due_date ? `<span class="text-xs text-gray-400">• Jatuh tempo: ${this.formatDate(inst.due_date)}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="text-right flex-shrink-0">
+                            <div class="font-bold text-gray-900">${this.formatRupiah(inst.total_amount)}</div>
+                            <div class="text-xs text-green-500">Dibayar: ${this.formatRupiah(inst.paid_amount)}</div>
+                            <div class="mt-3 flex justify-end gap-2">
+                                <button onclick="App.editInstallment('${inst.id}')" class="text-blue-600 hover:text-blue-700 bg-blue-50 p-2 rounded-xl transition" title="Edit" aria-label="Edit cicilan">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button onclick="App.deleteInstallment('${inst.id}')" class="text-red-600 hover:text-red-700 bg-red-50 p-2 rounded-xl transition" title="Hapus" aria-label="Hapus cicilan">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listBody.appendChild(item);
+            });
+        },
+
+        submitInstallment: async function() {
+            const data = {
+                name: document.getElementById('instName').value,
+                creditor: document.getElementById('instCreditor').value,
+                total_amount: parseFloat(document.getElementById('instTotal').value),
+                start_date: document.getElementById('instDate').value,
+                due_date: document.getElementById('instDueDate').value,
+                description: document.getElementById('instDesc').value
+            };
+            document.getElementById('spinInst').classList.remove('hidden');
+            document.getElementById('btnSubmitInst').disabled = true;
+            try {
+                const res = await this.api('addInstallment', data);
+                if (res.success) {
+                    this.showToast('Sukses', 'Cicilan baru berhasil ditambahkan.');
+                    this.closeModal('modal-add-inst');
+                    this.refreshData();
+                } else throw new Error(res.message);
+            } catch(e) { this.showToast('Gagal', e.message, 'error'); }
+            finally {
+                document.getElementById('spinInst').classList.add('hidden');
+                document.getElementById('btnSubmitInst').disabled = false;
+            }
+        },
+
+        deleteInstallment: function(id) {
+            this.openConfirm('Hapus Cicilan', 'Yakin ingin menghapus cicilan ini? Riwayat bayar di transaksi tidak akan terhapus otomatis.', async () => {
+                this.closeConfirm();
+                this.showLoading(true);
+                try {
+                    const res = await this.api('deleteInstallment', id);
+                    if (res.success) { this.showToast('Sukses', 'Data cicilan dihapus.'); this.refreshData(); }
+                    else throw new Error(res.message);
+                } catch(e) { this.showToast('Gagal', e.message, 'error'); }
+                finally { this.showLoading(false); }
+            });
+        },
+
+        editInstallment: function(id) {
+            const inst = this.installments.find(i => i.id === id);
+            if (!inst) return;
+            document.getElementById('editInstId').value = inst.id;
+            document.getElementById('editInstName').value = inst.name;
+            document.getElementById('editInstCreditor').value = inst.creditor;
+            document.getElementById('editInstTotal').value = inst.total_amount;
+            document.getElementById('editInstPaid').value = inst.paid_amount;
+            document.getElementById('editInstDate').value = inst.start_date ? inst.start_date.split('T')[0] : '';
+            document.getElementById('editInstDueDate').value = inst.due_date ? inst.due_date.split('T')[0] : '';
+            document.getElementById('editInstDesc').value = inst.description || '';
+            this.openModal('modal-edit-inst');
+        },
+
+        submitEditInstallment: async function() {
+            const data = {
+                id: document.getElementById('editInstId').value,
+                name: document.getElementById('editInstName').value,
+                creditor: document.getElementById('editInstCreditor').value,
+                total_amount: parseFloat(document.getElementById('editInstTotal').value),
+                paid_amount: parseFloat(document.getElementById('editInstPaid').value),
+                start_date: document.getElementById('editInstDate').value,
+                due_date: document.getElementById('editInstDueDate').value,
+                description: document.getElementById('editInstDesc').value
+            };
+            document.getElementById('spinEditInst').classList.remove('hidden');
+            document.getElementById('btnSubmitEditInst').disabled = true;
+            try {
+                const res = await this.api('updateInstallment', data);
+                if (res.success) {
+                    this.showToast('Sukses', 'Cicilan berhasil diperbarui.');
+                    this.closeModal('modal-edit-inst');
+                    this.refreshData();
+                } else throw new Error(res.message);
+            } catch(e) {
+                this.showToast('Gagal', e.message, 'error');
+            } finally {
+                document.getElementById('spinEditInst').classList.add('hidden');
+                document.getElementById('btnSubmitEditInst').disabled = false;
+            }
+        },
+
+        applyAccent: function(colorName) {
+            const colors = {
+                blue:   { main: '#2563eb', hover: '#1d4ed8', light: 'rgba(37,99,235,0.1)', r: 37, g: 99, b: 235 },
+                orange: { main: '#f97316', hover: '#ea580c', light: 'rgba(249,115,22,0.1)', r: 249, g: 115, b: 22 },
+                green:  { main: '#10b981', hover: '#059669', light: 'rgba(16,185,129,0.1)', r: 16, g: 185, b: 129 },
+                purple: { main: '#8b5cf6', hover: '#7c3aed', light: 'rgba(139,92,246,0.1)', r: 139, g: 92, b: 246 },
+                red:    { main: '#ef4444', hover: '#dc2626', light: 'rgba(239,68,68,0.1)', r: 239, g: 68, b: 68 }
+            };
+            const sel = colors[colorName] || colors.blue;
+            document.documentElement.style.setProperty('--primary-color', sel.main);
+            document.documentElement.style.setProperty('--primary-hover', sel.hover);
+            document.documentElement.style.setProperty('--primary-light', sel.light);
+            // Update neon RGB values for glow effects
+            document.documentElement.style.setProperty('--neon-r', sel.r);
+            document.documentElement.style.setProperty('--neon-g', sel.g);
+            document.documentElement.style.setProperty('--neon-b', sel.b);
+            // Update meta theme-color
+            document.getElementById('metaThemeColor').setAttribute('content', sel.main);
+            document.querySelectorAll('[id^="accent-"]').forEach(btn => {
+                btn.classList.remove('border-gray-800', 'scale-110');
+                btn.classList.add('border-transparent');
+            });
+            const activeBtn = document.getElementById(`accent-${colorName}-btn`);
+            if (activeBtn) { activeBtn.classList.remove('border-transparent'); activeBtn.classList.add('border-gray-800', 'scale-110'); }
+            localStorage.setItem('fulusku_accent', colorName);
+        },
+
+        setTheme: function(mode) {
+            const body = document.body;
+            const lightBtn = document.getElementById('theme-light-btn');
+            const darkBtn = document.getElementById('theme-dark-btn');
+            if (mode === 'dark') {
+                body.classList.add('dark');
+                darkBtn.classList.add('bg-accent', 'text-white', 'border-transparent');
+                lightBtn.classList.remove('bg-accent', 'text-white', 'border-transparent');
+                lightBtn.classList.add('border-gray-200');
+                document.getElementById('metaThemeColor').setAttribute('content', '#0f172a');
+            } else {
+                body.classList.remove('dark');
+                lightBtn.classList.add('bg-accent', 'text-white', 'border-transparent');
+                darkBtn.classList.remove('bg-accent', 'text-white', 'border-transparent');
+                darkBtn.classList.add('border-gray-200');
+            }
+            localStorage.setItem('fulusku_theme', mode);
+        },
+
+        loadPreferences: function() {
+            this.applyAccent(localStorage.getItem('fulusku_accent') || 'blue');
+            this.setTheme(localStorage.getItem('fulusku_theme') || 'light');
+            
+            // Muat konfigurasi koneksi
+            const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+            
+            const spInput = document.getElementById('dbSpreadsheetId');
+            const apiInput = document.getElementById('dbApiUrl');
+            if (spInput) spInput.value = spreadsheetId;
+            if (apiInput) apiInput.value = apiUrl;
+        },
+
+        saveConnectionSettings: function() {
+            const spreadsheetId = document.getElementById('dbSpreadsheetId').value.trim();
+            const apiUrl = document.getElementById('dbApiUrl').value.trim();
+            
+            localStorage.setItem('fulusku_spreadsheet_id', spreadsheetId || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM');
+            localStorage.setItem('fulusku_api_url', apiUrl);
+            
+            this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
+            
+            if (this.user) {
+                this.refreshData();
+            }
+        },
+
+        initSession: function() {
+            const savedUser = localStorage.getItem('fulusku_user');
+            if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
+                try {
+                    this.user = JSON.parse(savedUser) || { id: 'usr_1', username: 'Admin' };
+                    document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('loginScreen').classList.remove('active-screen');
+                    document.getElementById('loginScreen').classList.add('hidden-screen');
+                    document.getElementById('mainApp').classList.remove('hidden-screen');
+                    document.getElementById('mainApp').classList.add('active-screen');
+                    this.refreshData();
+                } catch(e) {
+                    localStorage.removeItem('fulusku_user');
+                }
+            }
+        }
+    };
+
+    // ════ INIT ════
+    window.onload = function() {
+        document.getElementById('trxDate').valueAsDate = new Date();
+        document.getElementById('instDate').valueAsDate = new Date();
+        document.getElementById('instDueDate').value = '';
+        App.loadPreferences();
+        App.initSession(); // Pulihkan sesi login otomatis jika ada
+        App.switchView('dashboard');
+
+        // Init Offline Queue
+        App.offlineQueue.init().then(() => {
+            App.updatePendingBadge();
+        }).catch(err => {
+            console.warn('Offline queue initialization failed:', err);
+        });
+
+        // Handle deep-link shortcut dari manifest
+        const urlParams = new URLSearchParams(window.location.search);
+        const action = urlParams.get('action');
+        if (action === 'dashboard') App.switchView('dashboard');
+
+        // Init Fullscreen controller
+        FS.init();
+
+        // Init PWA
+        PWA.init();
+    };
+    </script>
+</body>
+</html>
