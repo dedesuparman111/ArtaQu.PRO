@@ -1,6 +1,6 @@
 {
-  "name": "FulusKUpro - Financial Manager",
-  "short_name": "FulusKU",
+  "name": "ArtaQu - Financial Manager",
+  "short_name": "ArtaQu",
   "description": "Kelola keuangan pribadi: transaksi, cicilan, dan saldo bersih dalam satu tempat.",
   "start_url": "/index.html",
   "display": "standalone",
