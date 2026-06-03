@@ -1131,7 +1131,7 @@
                     <!-- Empty desktop-->
                     <div id="trxEmpty" class="hidden p-12 text-center text-gray-500 sm:block">
                         <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
-                        <p class="font-medium">Belum ada transaksi.</p>
+                        <p class="font-medium"></p>
                     </div>
                 </div>
             </div>
@@ -1195,7 +1195,7 @@
                     <!-- Empty desktop -->
                     <div id="instEmpty" class="hidden p-12 text-center text-gray-500 sm:block">
                         <i class="bi bi-inbox text-4xl mb-3 block opacity-30"></i>
-                        <p class="font-medium">Belum ada data cicilan.</p>
+                        <p class="font-medium"></p>
                     </div>
                 </div>
             </div>
@@ -2459,14 +2459,10 @@
             tbody.innerHTML = '';
             listBody.innerHTML = '';
 
-            if (this.transactions.length === 0) {
-                document.getElementById('trxEmpty').classList.remove('hidden');
-                document.getElementById('trxEmptyMobile').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('trxEmpty').classList.add('hidden');
-            document.getElementById('trxEmptyMobile').classList.add('hidden');
+            const isEmpty = this.transactions.length === 0;
+            document.getElementById('trxEmpty').classList.toggle('hidden', !isEmpty);
+            document.getElementById('trxEmptyMobile').classList.toggle('hidden', !isEmpty);
+            if (isEmpty) return;   
 
             this.transactions.forEach(trx => {
                 let badgeClass = 'badge-neutral';
@@ -2642,14 +2638,10 @@
             tbody.innerHTML = '';
             listBody.innerHTML = '';
 
-            if (dataList.length === 0) {
-                document.getElementById('instEmpty').classList.remove('hidden');
-                document.getElementById('instEmptyMobile').classList.remove('hidden');
-                return;
-            }
-
-            document.getElementById('instEmpty').classList.add('hidden');
-            document.getElementById('instEmptyMobile').classList.add('hidden');
+            const isEmpty = dataList.length === 0;
+            document.getElementById('instEmpty').classList.toggle('hidden', !isEmpty);
+            document.getElementById('instEmptyMobile').classList.toggle('hidden', !isEmpty);
+            if (isEmpty) return;
 
             const statusToBadge = (status) => {
                 if (status === 'Lunas') return { cls: 'badge-success', icon: 'bi-check-circle' };
