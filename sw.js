@@ -5,7 +5,7 @@
 //   - Fallback offline → tampilkan index.html dari cache
 // ─────────────────────────────────────────────────────────────────
 
-const CACHE_NAME = 'fulusku-v1';
+const CACHE_NAME = 'ArtaQu-v001';
 
 // Aset yang di-cache saat install
 const STATIC_ASSETS = [
