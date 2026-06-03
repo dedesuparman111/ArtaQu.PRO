@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>FulusKUpro - Financial Manager</title>
+    <title>Artaqu - Financial Manager</title>
 
     <!-- ═══════════════════════════════════════════════
          PWA META TAGS — wajib ada
@@ -13,7 +13,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="FulusKU">
+    <meta name="apple-mobile-web-app-title" content="ArtaQu">
     <link rel="manifest" href="manifest.json">
     <!-- Apple Touch Icon (pakai icon-192 yang sudah ada) -->
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -955,7 +955,7 @@
                 <div class="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-50 text-accent rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-lg relative">
                     <i class="bi bi-cash-coin"></i>
                 </div>
-                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">FulusKUpro</h1>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">ArtaQu</h1>
                 <p class="text-sm text-gray-600 mt-2 font-medium">Kelola keuangan Anda dengan profesional.</p>
             </div>
 
@@ -986,7 +986,7 @@
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                         <i class="bi bi-cash-coin app-brand-icon text-xl text-white"></i>
                     </div>
-                    <span class="font-bold app-brand-name text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent truncate">FulusKUpro</span>
+                    <span class="font-bold app-brand-name text-xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent truncate">ArtaQu</span>
                 </div>
                 <div class="header-actions flex items-center gap-1 sm:gap-2 flex-shrink-0">
                     <span class="text-sm text-gray-600 hidden sm:block mr-1 font-medium">Halo, <b id="userNameDisplay" class="text-gray-900">Admin</b></span>
@@ -1359,7 +1359,7 @@
                 <div id="pwaInstallSection" class="pt-4 border-t border-gray-200">
                     <label class="block text-sm font-bold text-gray-900 mb-3 uppercase tracking-wider">Instalasi Aplikasi</label>
                     <button id="btnInstallFromSettings" onclick="PWA.doInstall()" class="w-full py-3 border-2 border-dashed border-blue-300 rounded-xl font-semibold flex justify-center items-center gap-2 text-blue-600 hover:bg-blue-50 transition hidden">
-                        <i class="bi bi-download"></i> Install FulusKUpro ke Home Screen
+                        <i class="bi bi-download"></i> Install ArtaQu ke Home Screen
                     </button>
                     <div id="pwaInstalledLabel" class="hidden text-center text-sm text-green-600 font-semibold py-2 bg-green-50 rounded-lg">
                         <i class="bi bi-check-circle-fill"></i> Aplikasi sudah terinstall
@@ -1575,7 +1575,7 @@
     <div id="pwa-banner">
         <div class="pwa-banner-icon"><i class="bi bi-cash-coin"></i></div>
         <div class="pwa-banner-text">
-            <strong>Install FulusKUpro</strong>
+            <strong>Install ArtaQu</strong>
             <span>Akses cepat dari home screen</span>
         </div>
         <button class="pwa-btn-install" onclick="PWA.doInstall()">Install</button>
@@ -1597,7 +1597,7 @@
             </div>
             <div class="ios-step">
                 <div class="step-num">3</div>
-                <div class="step-text">Tap <strong>Add</strong> — ikon FulusKUpro langsung muncul di home screen</div>
+                <div class="step-text">Tap <strong>Add</strong> — ikon ArtaQu langsung muncul di home screen</div>
             </div>
             <button class="btn-close-ios" onclick="PWA.closeIosModal()" aria-label="Tutup panduan iOS">Mengerti</button>
         </div>
@@ -1611,7 +1611,7 @@
     </div>
 
     <!-- Installed Toast -->
-    <div id="installed-toast">✓ FulusKUpro berhasil diinstall!</div>
+    <div id="installed-toast">✓ Artaqu berhasil diinstall!</div>
 
     <!-- ════ MOBILE BOTTOM NAVIGATION ════ -->
     <nav id="mobile-bottom-nav" aria-label="Navigasi utama mobile">
@@ -1711,7 +1711,7 @@
             const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches
                               || window.navigator.standalone === true;
-            const isDismissed = sessionStorage.getItem('fulusku-pwa-dismissed');
+            const isDismissed = sessionStorage.getItem('ArtaQu-pwa-dismissed');
 
             // Sudah running sebagai PWA
             if (isStandalone) {
@@ -1808,12 +1808,12 @@
 
         dismissBanner: function() {
             document.getElementById('pwa-banner').classList.remove('show');
-            sessionStorage.setItem('fulusku-pwa-dismissed', '1');
+            sessionStorage.setItem('ArtaQu-pwa-dismissed', '1');
         },
 
         closeIosModal: function() {
             document.getElementById('ios-modal').classList.remove('show');
-            sessionStorage.setItem('fulusku-pwa-dismissed', '1');
+            sessionStorage.setItem('ArtaQu-pwa-dismissed', '1');
         },
 
         _showInstalledState: function() {
@@ -1970,7 +1970,7 @@
     //  OFFLINE QUEUE SYSTEM (Simpan & Sync data saat offline)
     // ════════════════════════════════════════════════════════
     class OfflineQueue {
-        constructor(dbName = 'fulusku-offline-queue') {
+        constructor(dbName = 'ArtaQu-offline-queue') {
             this.dbName = dbName;
             this.db = null;
             this.isPending = false;
@@ -2061,8 +2061,8 @@
                         [functionName](...args);
                 });
             } else {
-                const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
-                const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+                const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
                 
                 if (!apiUrl) {
                     return Promise.reject(new Error('URL API Google Apps Script belum dikonfigurasi! Silakan atur dengan mengklik ikon Roda Gigi (gear) di kanan atas.'));
@@ -2171,8 +2171,8 @@
         },
 
         _apiDirect: function(functionName, ...args) {
-            const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
-            const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             if (!apiUrl) {
                 return Promise.reject(new Error('URL API belum dikonfigurasi.'));
@@ -2318,7 +2318,7 @@
                 const res = await this.api('loginUser', user, pass);
                 if (res.success) {
                     this.user = res.data || { id: 'usr_1', username: 'Admin' };
-                    localStorage.setItem('fulusku_user', JSON.stringify(this.user)); // Simpan sesi
+                    localStorage.setItem('ArtaQu_user', JSON.stringify(this.user)); // Simpan sesi
                     document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
                     document.getElementById('loginScreen').classList.remove('active-screen');
                     document.getElementById('loginScreen').classList.add('hidden-screen');
@@ -2341,7 +2341,7 @@
 
         logout: function() {
             this.user = null;
-            localStorage.removeItem('fulusku_user'); // Hapus sesi
+            localStorage.removeItem('ArtaQu_user'); // Hapus sesi
             document.getElementById('mainApp').classList.remove('active-screen');
             document.getElementById('mainApp').classList.add('hidden-screen');
             setTimeout(() => {
@@ -2829,7 +2829,7 @@
             });
             const activeBtn = document.getElementById(`accent-${colorName}-btn`);
             if (activeBtn) { activeBtn.classList.remove('border-transparent'); activeBtn.classList.add('border-gray-800', 'scale-110'); }
-            localStorage.setItem('fulusku_accent', colorName);
+            localStorage.setItem('ArtaQu_accent', colorName);
         },
 
         setTheme: function(mode) {
@@ -2848,16 +2848,16 @@
                 darkBtn.classList.remove('bg-accent', 'text-white', 'border-transparent');
                 darkBtn.classList.add('border-gray-200');
             }
-            localStorage.setItem('fulusku_theme', mode);
+            localStorage.setItem('ArtaQu_theme', mode);
         },
 
         loadPreferences: function() {
-            this.applyAccent(localStorage.getItem('fulusku_accent') || 'blue');
-            this.setTheme(localStorage.getItem('fulusku_theme') || 'light');
+            this.applyAccent(localStorage.getItem('ArtaQu_accent') || 'blue');
+            this.setTheme(localStorage.getItem('ArtaQu_theme') || 'light');
             
             // Muat konfigurasi koneksi
-            const spreadsheetId = localStorage.getItem('fulusku_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
-            const apiUrl = localStorage.getItem('fulusku_api_url') || '';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             const spInput = document.getElementById('dbSpreadsheetId');
             const apiInput = document.getElementById('dbApiUrl');
@@ -2869,8 +2869,8 @@
             const spreadsheetId = document.getElementById('dbSpreadsheetId').value.trim();
             const apiUrl = document.getElementById('dbApiUrl').value.trim();
             
-            localStorage.setItem('fulusku_spreadsheet_id', spreadsheetId || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM');
-            localStorage.setItem('fulusku_api_url', apiUrl);
+            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM');
+            localStorage.setItem('ArtaQu_api_url', apiUrl);
             
             this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
             
@@ -2880,7 +2880,7 @@
         },
 
         initSession: function() {
-            const savedUser = localStorage.getItem('fulusku_user');
+            const savedUser = localStorage.getItem('ArtaQu_user');
             if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
                 try {
                     this.user = JSON.parse(savedUser) || { id: 'usr_1', username: 'Admin' };
@@ -2892,7 +2892,7 @@
                     document.getElementById('mainApp').classList.add('active-screen');
                     this.refreshData();
                 } catch(e) {
-                    localStorage.removeItem('fulusku_user');
+                    localStorage.removeItem('ArtaQu_user');
                 }
             }
         }
