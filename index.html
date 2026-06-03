@@ -1338,7 +1338,7 @@
                                     <i class="bi bi-qr-code text-sm"></i> Scan QR
                                 </button>
                             </div>
-                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM">
+                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="spreadsheet ID">
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-2">
@@ -2061,7 +2061,7 @@
                         [functionName](...args);
                 });
             } else {
-                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
                 const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
                 
                 if (!apiUrl) {
@@ -2171,7 +2171,7 @@
         },
 
         _apiDirect: function(functionName, ...args) {
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             if (!apiUrl) {
@@ -2848,7 +2848,7 @@
             this.setTheme(localStorage.getItem('ArtaQu_theme') || 'light');
             
             // Muat konfigurasi koneksi
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             const spInput = document.getElementById('dbSpreadsheetId');
@@ -2861,7 +2861,7 @@
             const spreadsheetId = document.getElementById('dbSpreadsheetId').value.trim();
             const apiUrl = document.getElementById('dbApiUrl').value.trim();
             
-            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || '1aRClSDk_R5_JJiJgS3FAISljUOI3ZACKgJr5R19ckQM');
+            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || 'spreadsheet ID');
             localStorage.setItem('ArtaQu_api_url', apiUrl);
             
             this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
