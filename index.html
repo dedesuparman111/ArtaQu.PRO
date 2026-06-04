@@ -350,6 +350,33 @@
             border: 1px solid rgba(148, 163, 184, 0.22);
             box-shadow: 0 10px 40px rgba(2, 6, 23, 0.35);
         }
+        body.dark header {
+            background: linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+            border-bottom-color: rgba(148, 163, 184, 0.15) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+        }
+        body.dark header .desktop-nav-tabs {
+            border-top-color: rgba(148, 163, 184, 0.12) !important;
+        }
+        body.dark header .nav-item {
+            color: #94a3b8 !important;
+        }
+        body.dark header .nav-item:hover {
+            color: var(--primary-color) !important;
+        }
+        body.dark header .nav-item.active {
+            color: var(--primary-color) !important;
+            border-bottom-color: var(--primary-color) !important;
+        }
+        body.dark header .app-brand-name {
+            background: linear-gradient(90deg, #60a5fa, #818cf8) !important;
+            -webkit-background-clip: text !important;
+            -webkit-text-fill-color: transparent !important;
+            background-clip: text !important;
+        }
+        body.dark .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+            background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
+        }
         body.dark .bg-gray-50 { background-color: #1e293b !important; border-color: #334155 !important; }
         body.dark .bg-gray-100 { background-color: #334155 !important; border-color: #475569 !important; }
         body.dark .text-gray-900, body.dark .text-gray-800, body.dark .text-gray-700 { color: #f1f5f9 !important; }
@@ -980,7 +1007,7 @@
 
     <!-- MAIN APPLICATION WORKSPACE -->
     <div id="mainApp" class="hidden-screen transition-all-smooth flex flex-col min-h-screen">
-        <header class="bg-gradient-to-r from-white via-white to-gray-50 shadow-md sticky top-0 z-40 border-b border-gray-100">
+       <header class="shadow-md sticky top-0 z-40 border-b border-gray-100" style="background: linear-gradient(90deg, #ffffff 0%, #f9fafb 100%); transition: background 0.3s;">
             <div class="max-w-5xl mx-auto px-3 sm:px-4 h-14 sm:h-16 flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2 text-accent flex-shrink-0 min-w-0">
                     <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -1338,7 +1365,7 @@
                                     <i class="bi bi-qr-code text-sm"></i> Scan QR
                                 </button>
                             </div>
-                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="spreadsheet ID">
+                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="SPREADSHEET ID">
                         </div>
                         <div>
                             <div class="flex justify-between items-center mb-2">
@@ -2061,7 +2088,7 @@
                         [functionName](...args);
                 });
             } else {
-                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
+                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
                 const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
                 
                 if (!apiUrl) {
@@ -2171,7 +2198,7 @@
         },
 
         _apiDirect: function(functionName, ...args) {
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             if (!apiUrl) {
@@ -2848,7 +2875,7 @@
             this.setTheme(localStorage.getItem('ArtaQu_theme') || 'light');
             
             // Muat konfigurasi koneksi
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'spreadsheet ID';
+            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             const spInput = document.getElementById('dbSpreadsheetId');
@@ -2861,7 +2888,7 @@
             const spreadsheetId = document.getElementById('dbSpreadsheetId').value.trim();
             const apiUrl = document.getElementById('dbApiUrl').value.trim();
             
-            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || 'spreadsheet ID');
+            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || 'SPREADSHEET ID');
             localStorage.setItem('ArtaQu_api_url', apiUrl);
             
             this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
