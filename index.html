@@ -2869,12 +2869,13 @@
 
         saveConnectionSettings: function() {
             const apiUrl = document.getElementById('dbApiUrl').value.trim();
-            
-            localStorage.removeItem('ArtaQu_spreadsheet_id');
+
+            // Hanya URL Web App GAS yang dibutuhkan — tidak ada lagi Spreadsheet ID
+            // yang perlu diminta/disimpan dari frontend.
             localStorage.setItem('ArtaQu_api_url', apiUrl);
-            
+
             this.showToast('Sukses', 'Konfigurasi web app berhasil disimpan.');
-            
+
             if (this.user) {
                 this.refreshData();
             }
