@@ -760,20 +760,23 @@
             box-shadow: 0 -8px 30px rgba(0,0,0,0.25);
         }
         @media (max-width: 640px) {
-            #mobile-bottom-nav {
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-            }
-            /* Hide desktop nav tabs on mobile */
-            .desktop-nav-tabs {
-                display: none !important;
-            }
-            /* Add bottom padding to main content to avoid footer overlap */
-            main {
-                padding-bottom: 90px !important;
-            }
-        }
+    #mobile-bottom-nav {
+        display: none;
+    }
+    body.logged-in #mobile-bottom-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    /* Hide desktop nav tabs on mobile */
+    .desktop-nav-tabs {
+        display: none !important;
+    }
+    /* Add bottom padding to main content to avoid footer overlap */
+    main {
+        padding-bottom: 90px !important;
+    }
+}
 
         .mob-nav-item {
             display: flex;
@@ -2330,11 +2333,12 @@
             try {
                 const res = await this.api('loginUser', user, pass);
                 if (res.success) {
-                    this.user = res.data || { id: 'usr_1', username: 'Admin' };
-                    localStorage.setItem('ArtaQu_user', JSON.stringify(this.user)); // Simpan sesi
-                    document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
-                    document.getElementById('loginScreen').classList.remove('active-screen');
-                    document.getElementById('loginScreen').classList.add('hidden-screen');
+    this.user = res.data || { id: 'usr_1', username: 'Admin' };
+    localStorage.setItem('ArtaQu_user', JSON.stringify(this.user)); // Simpan sesi
+    document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
+    document.body.classList.add('logged-in'); // Tampilkan footer nav mobile
+    document.getElementById('loginScreen').classList.remove('active-screen');
+    document.getElementById('loginScreen').classList.add('hidden-screen');
                     setTimeout(() => {
                         document.getElementById('loginScreen').style.display = 'none';
                         document.getElementById('mainApp').classList.remove('hidden-screen');
@@ -2353,10 +2357,11 @@
         },
 
         logout: function() {
-            this.user = null;
-            localStorage.removeItem('ArtaQu_user'); // Hapus sesi
-            document.getElementById('mainApp').classList.remove('active-screen');
-            document.getElementById('mainApp').classList.add('hidden-screen');
+    this.user = null;
+    localStorage.removeItem('ArtaQu_user'); // Hapus sesi
+    document.body.classList.remove('logged-in'); // Sembunyikan footer nav mobile
+    document.getElementById('mainApp').classList.remove('active-screen');
+    document.getElementById('mainApp').classList.add('hidden-screen');
             setTimeout(() => {
                 const loginScreen = document.getElementById('loginScreen');
                 loginScreen.style.display = 'flex';
@@ -2880,14 +2885,14 @@
                 this.refreshData();
             }
         },
-
-        initSession: function() {
-            const savedUser = localStorage.getItem('ArtaQu_user');
-            if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
-                try {
-                    this.user = JSON.parse(savedUser) || { id: 'usr_1', username: 'Admin' };
-                    document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
-                    document.getElementById('loginScreen').style.display = 'none';
+          initSession: function() {
+    const savedUser = localStorage.getItem('ArtaQu_user');
+    if (savedUser && savedUser !== 'undefined' && savedUser !== 'null') {
+        try {
+            this.user = JSON.parse(savedUser) || { id: 'usr_1', username: 'Admin' };
+            document.getElementById('userNameDisplay').innerText = this.user.username || 'Admin';
+            document.body.classList.add('logged-in'); // Tampilkan footer nav mobile
+            document.getElementById('loginScreen').style.display = 'none';        
                     document.getElementById('loginScreen').classList.remove('active-screen');
                     document.getElementById('loginScreen').classList.add('hidden-screen');
                     document.getElementById('mainApp').classList.remove('hidden-screen');
