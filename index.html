@@ -2081,7 +2081,7 @@
                 const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
                 
                 if (!apiUrl) {
-                    return Promise.reject(new Error('URL API Google Apps Script belum dikonfigurasi! Silakan atur dengan mengklik ikon Roda Gigi (gear) di kanan atas.'));
+                    return Promise.reject(new Error('URL Google Apps Script belum dikonfigurasi. Silakan atur di menu Pengaturan terlebih dahulu.'));
                 }
                 
                 return fetch(apiUrl, {
@@ -2189,7 +2189,7 @@
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             if (!apiUrl) {
-                return Promise.reject(new Error('URL API belum dikonfigurasi.'));
+                return Promise.reject(new Error('URL Google Apps Script belum dikonfigurasi. Silakan atur di menu Pengaturan terlebih dahulu.'));
             }
             
             return fetch(apiUrl, {
