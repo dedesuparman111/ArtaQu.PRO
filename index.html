@@ -1360,15 +1360,6 @@
                     <div class="space-y-3">
                         <div>
                             <div class="flex justify-between items-center mb-2">
-                                <label class="block text-xs font-semibold text-gray-600">Spreadsheet ID</label>
-                                <button type="button" onclick="QRScanner.startScan('spreadsheetId')" class="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition hover:bg-blue-50 px-2 py-1 rounded">
-                                    <i class="bi bi-qr-code text-sm"></i> Scan QR
-                                </button>
-                            </div>
-                            <input type="text" id="dbSpreadsheetId" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus-ring-accent font-medium" placeholder="SPREADSHEET ID">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
                                 <label class="block text-xs font-semibold text-gray-600">Google Apps Script Web App URL</label>
                                 <button type="button" onclick="QRScanner.startScan('apiUrl')" class="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 transition hover:bg-blue-50 px-2 py-1 rounded">
                                     <i class="bi bi-qr-code text-sm"></i> Scan QR
@@ -1951,8 +1942,7 @@
                 return;
             }
 
-            const inputId = this.currentTarget === 'spreadsheetId' ? 'dbSpreadsheetId' : 'dbApiUrl';
-            document.getElementById(inputId).value = this.scannedResult;
+            document.getElementById('dbApiUrl').value = this.scannedResult;
             
             App.showToast('Sukses', 'Hasil QR code berhasil diisi.', 'success');
             this.stopScan();
@@ -2088,7 +2078,6 @@
                         [functionName](...args);
                 });
             } else {
-                const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
                 const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
                 
                 if (!apiUrl) {
@@ -2100,8 +2089,7 @@
                     mode: 'cors',
                     body: JSON.stringify({
                         action: functionName,
-                        arguments: args,
-                        spreadsheetId: spreadsheetId
+                        arguments: args
                     })
                 })
                 .then(response => {
@@ -2198,7 +2186,6 @@
         },
 
         _apiDirect: function(functionName, ...args) {
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
             if (!apiUrl) {
@@ -2210,8 +2197,7 @@
                 mode: 'cors',
                 body: JSON.stringify({
                     action: functionName,
-                    arguments: args,
-                    spreadsheetId: spreadsheetId
+                    arguments: args
                 })
             })
             .then(response => response.json());
@@ -2875,20 +2861,16 @@
             this.setTheme(localStorage.getItem('ArtaQu_theme') || 'light');
             
             // Muat konfigurasi koneksi
-            const spreadsheetId = localStorage.getItem('ArtaQu_spreadsheet_id') || 'SPREADSHEET ID';
             const apiUrl = localStorage.getItem('ArtaQu_api_url') || '';
             
-            const spInput = document.getElementById('dbSpreadsheetId');
             const apiInput = document.getElementById('dbApiUrl');
-            if (spInput) spInput.value = spreadsheetId;
             if (apiInput) apiInput.value = apiUrl;
         },
 
         saveConnectionSettings: function() {
-            const spreadsheetId = document.getElementById('dbSpreadsheetId').value.trim();
             const apiUrl = document.getElementById('dbApiUrl').value.trim();
             
-            localStorage.setItem('ArtaQu_spreadsheet_id', spreadsheetId || 'SPREADSHEET ID');
+            localStorage.removeItem('ArtaQu_spreadsheet_id');
             localStorage.setItem('ArtaQu_api_url', apiUrl);
             
             this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
