@@ -637,11 +637,11 @@
 
                 <!-- ════ DATABASE CONNECTION SECTION ════ -->
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Koneksi Database (Google Sheets)</label>
+                    <label class="block text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wider">Koneksi Web App (Google Apps Script)</label>
                     <div class="space-y-3">
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="block text-xs font-medium text-gray-500">Google Apps Script Web App URL</label>
+                                <label class="block text-xs font-medium text-gray-500">URL Web App Google Apps Script</label>
                                 <button type="button" onclick="QRScanner.startScan('apiUrl')" class="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 transition">
                                     <i class="bi bi-qr-code"></i> Scan QR
                                 </button>
@@ -649,7 +649,7 @@
                             <input type="text" id="dbApiUrl" class="w-full p-2.5 border border-gray-200 rounded-lg text-sm outline-none focus-ring-accent" placeholder="https://script.google.com/macros/s/.../exec">
                         </div>
                         <button type="button" onclick="App.saveConnectionSettings()" class="w-full py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-semibold transition flex justify-center items-center gap-2">
-                            <i class="bi bi-cloud-check-fill"></i> Simpan & Hubungkan
+                            <i class="bi bi-cloud-check-fill"></i> Simpan URL Web App
                         </button>
                     </div>
                 </div>
@@ -1824,7 +1824,7 @@
             localStorage.removeItem('fulusku_spreadsheet_id');
             localStorage.setItem('fulusku_api_url', apiUrl);
             
-            this.showToast('Sukses', 'Konfigurasi database berhasil disimpan.');
+            this.showToast('Sukses', 'Konfigurasi web app berhasil disimpan.');
             
             if (this.user) {
                 this.refreshData();
